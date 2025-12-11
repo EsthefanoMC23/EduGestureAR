@@ -15,14 +15,60 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 </head>
 <body>
+  <div class="top-bar">
+    <div class="brand">
+      <span class="logo-dot"></span>
+      <span class="brand-title">EduGesture <span class="brand-sub">AR</span></span>
+    </div>
+    <div class="top-info">
+      <span>👋 Mueve tu mano para rotar la figura</span>
+      <span>🤏 Junta pulgar + índice para cambiar de figura</span>
+    </div>
+  </div>
+
   <div class="app-container">
+    <!-- Panel de cámara + landmarks -->
     <div class="video-panel">
+      <div class="panel-header">
+        <span class="panel-title">Cámara &amp; Gestos</span>
+        <span class="panel-badge">Real-time</span>
+      </div>
       <video id="input-video" playsinline></video>
       <canvas id="overlay"></canvas>
     </div>
 
+    <!-- Panel 3D + HUD educativo -->
     <div class="scene-panel">
+      <div class="panel-header">
+        <span class="panel-title">Escena 3D Educativa</span>
+        <span class="panel-badge panel-badge-blue">Math Mode</span>
+      </div>
       <canvas id="scene3d"></canvas>
+
+      <div class="hud">
+        <div class="hud-row">
+          <span class="hud-label">Figura actual:</span>
+          <span id="shape-name" class="hud-value">Cubo</span>
+        </div>
+        <div class="hud-row">
+          <span class="hud-label">Rotación X / Y:</span>
+          <span id="rotation-info" class="hud-value">0° / 0°</span>
+        </div>
+        <div class="hud-section">
+          <div class="hud-label">Fórmula de volumen:</div>
+          <div id="formula-text" class="hud-formula">
+            V = lado³
+          </div>
+          <ul id="formula-explain" class="hud-explain">
+            <li><strong>V</strong>: volumen de la figura</li>
+            <li><strong>lado</strong>: longitud de cada arista del cubo</li>
+          </ul>
+        </div>
+        <div class="hud-tip">
+          💡 Consejo: prueba mover tu mano a la izquierda/derecha y arriba/abajo
+          para ver cómo cambia la orientación de la figura. Usa 🤏 para cambiar de figura.
+        </div>
+      </div>
     </div>
   </div>
 
