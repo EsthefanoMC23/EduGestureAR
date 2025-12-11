@@ -60,14 +60,15 @@ scene.add(mesh);
 let targetRotX = mesh.rotation.x;
 let targetRotY = mesh.rotation.y;
 
-// HUD elements
+// =========================
+// 2. HUD y controles
+// =========================
 const shapeNameEl = document.getElementById("shape-name");
 const rotationInfoEl = document.getElementById("rotation-info");
 const formulaTextEl = document.getElementById("formula-text");
 const formulaExplainEl = document.getElementById("formula-explain");
 const volumeValueEl = document.getElementById("volume-value");
 
-// Controles de dimensiones
 const controlLadoDiv = document.getElementById("control-lado");
 const controlRadioDiv = document.getElementById("control-radio");
 const controlAlturaDiv = document.getElementById("control-altura");
@@ -79,7 +80,10 @@ const radioNumber = document.getElementById("radio-number");
 const alturaRange = document.getElementById("altura-range");
 const alturaNumber = document.getElementById("altura-number");
 
-// Aplicar escala al mesh según dimensiones
+const hudEl = document.getElementById("hud");
+const hudToggleBtn = document.getElementById("hud-toggle");
+
+// Escalar mesh según dimensiones
 function applyScaleFromDimensions() {
   if (!mesh) return;
 
@@ -92,12 +96,11 @@ function applyScaleFromDimensions() {
   } else if (currentShape === "cilindro") {
     const r = dims.radio;
     const h = dims.altura;
-    // Escalamos el cilindro: radio en X/Z, altura en Y
-    mesh.scale.set(r, h, r);
+    mesh.scale.set(r, h, r); // radio en X/Z, altura en Y
   }
 }
 
-// Calcular volumen según la figura actual
+// Calcular volumen
 function updateVolume() {
   let V = 0;
   if (currentShape === "cubo") {
@@ -117,13 +120,12 @@ function updateVolume() {
   }
 }
 
-// Actualizar HUD según figura actual
+// Actualizar HUD según figura
 function updateHUDForShape() {
   if (!shapeNameEl || !formulaTextEl || !formulaExplainEl) return;
 
   formulaExplainEl.innerHTML = "";
 
-  // Mostrar / ocultar controles relevantes
   if (controlLadoDiv) controlLadoDiv.style.display = currentShape === "cubo" ? "flex" : "none";
   if (controlRadioDiv) controlRadioDiv.style.display =
     currentShape === "esfera" || currentShape === "cilindro" ? "flex" : "none";
@@ -131,27 +133,21 @@ function updateHUDForShape() {
 
   if (currentShape === "cubo") {
     shapeNameEl.textContent = "Cubo";
-
     formulaTextEl.textContent = "V = lado³";
-
     formulaExplainEl.innerHTML = `
       <li><strong>V</strong>: volumen del cubo</li>
       <li><strong>lado</strong>: longitud de cada arista del cubo</li>
     `;
   } else if (currentShape === "esfera") {
     shapeNameEl.textContent = "Esfera";
-
     formulaTextEl.textContent = "V = (4/3) · π · radio³";
-
     formulaExplainEl.innerHTML = `
       <li><strong>V</strong>: volumen de la esfera</li>
       <li><strong>radio</strong>: distancia desde el centro de la esfera a la superficie</li>
     `;
   } else if (currentShape === "cilindro") {
     shapeNameEl.textContent = "Cilindro";
-
     formulaTextEl.textContent = "V = π · radio² · altura";
-
     formulaExplainEl.innerHTML = `
       <li><strong>V</strong>: volumen del cilindro</li>
       <li><strong>radio</strong>: radio de la base circular</li>
@@ -165,6 +161,7 @@ function updateHUDForShape() {
 
 updateHUDForShape();
 
+// Animación / resize
 function onResize() {
   const width = sceneCanvas.clientWidth;
   const height = sceneCanvas.clientHeight;
@@ -178,11 +175,9 @@ onResize();
 function animate() {
   requestAnimationFrame(animate);
 
-  // Suavizamos el movimiento hacia la rotación objetivo
   mesh.rotation.x += (targetRotX - mesh.rotation.x) * 0.1;
   mesh.rotation.y += (targetRotY - mesh.rotation.y) * 0.1;
 
-  // Mostrar rotación en grados en el HUD
   const degX = (mesh.rotation.x * 180 / Math.PI).toFixed(0);
   const degY = (mesh.rotation.y * 180 / Math.PI).toFixed(0);
   if (rotationInfoEl) {
@@ -193,10 +188,7 @@ function animate() {
 }
 animate();
 
-// =========================
-// 2. Listeners de controles
-// =========================
-
+// Sincronizar sliders / inputs numéricos
 function syncRangeAndNumber(rangeEl, numberEl, onChange) {
   if (!rangeEl || !numberEl) return;
 
@@ -239,25 +231,41 @@ syncRangeAndNumber(alturaRange, alturaNumber, (val) => {
   updateVolume();
 });
 
+// HUD desplegable
+let hudOpen = true;
+
+if (hudToggleBtn && hudEl) {
+  hudToggleBtn.addEventListener("click", () => {
+    hudOpen = !hudOpen;
+    if (hudOpen) {
+      hudEl.classList.remove("hud-collapsed");
+      hudToggleBtn.textContent = "▼";
+    } else {
+      hudEl.classList.add("hud-collapsed");
+      hudToggleBtn.textContent = "▲";
+    }
+  });
+}
+
 // =========================
-// 3. Setup MediaPipe Hands
+// 3. MediaPipe Hands
 // =========================
 const videoElement = document.getElementById("input-video");
 const overlay = document.getElementById("overlay");
 const overlayCtx = overlay.getContext("2d");
 
-// Punto fijo de activación en pantalla (botón verde)
-const activationRadius = 35; // en píxeles
-const buttonCenter = { x: 0, y: 0 }; // se calcula cada frame según el tamaño del canvas
-
-// Ajustar tamaño del overlay
 function resizeOverlay() {
   overlay.width = videoElement.clientWidth;
   overlay.height = videoElement.clientHeight;
 }
 window.addEventListener("resize", resizeOverlay);
 
-// Cooldown para no cambiar de figura muchas veces seguidas
+// Botón fijo en una esquina (lado superior izquierdo)
+const activationRadius = 35;
+const buttonCenter = { x: 0, y: 0 };
+
+// estados de clic por pinch
+let clickActive = false;
 let shapeChangeCooldown = false;
 
 function isIndexOnButton(ix, iy) {
@@ -265,6 +273,15 @@ function isIndexOnButton(ix, iy) {
   const dy = iy - buttonCenter.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
   return dist < activationRadius;
+}
+
+function detectPinch(landmarks) {
+  const thumb = landmarks[4];
+  const index = landmarks[8];
+  const dx = thumb.x - index.x;
+  const dy = thumb.y - index.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  return dist < 0.04;
 }
 
 function cycleShape() {
@@ -286,7 +303,7 @@ function cycleShape() {
   updateHUDForShape();
 }
 
-// Callback cuando MediaPipe procesa un frame
+// Callback de MediaPipe
 function onResults(results) {
   resizeOverlay();
   overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
@@ -297,61 +314,66 @@ function onResults(results) {
 
   const landmarks = results.multiHandLandmarks[0];
 
-  // Punto de interés: punta del dedo índice (tip = 8)
   const indexTip = landmarks[8];
 
-  // Coordenadas del índice en la pantalla
   const ix = indexTip.x * overlay.width;
   const iy = indexTip.y * overlay.height;
 
-  // Definir el botón fijo en una esquina (por ejemplo, esquina superior derecha)
+  // botón fijo: ahora margen desde el lado izquierdo
   const margin = 40;
-  buttonCenter.x = overlay.width - margin;
+  buttonCenter.x = margin;
   buttonCenter.y = margin;
 
   const touchingButton = isIndexOnButton(ix, iy);
 
-  // Dibujar botón fijo (círculo verde en la esquina)
+  // Detección de pinch -> "clic" corto
+  if (detectPinch(landmarks) && !clickActive) {
+    clickActive = true;
+    setTimeout(() => {
+      clickActive = false;
+    }, 200);
+  }
+
+  // Dibujar botón verde fijo
   overlayCtx.beginPath();
   overlayCtx.arc(buttonCenter.x, buttonCenter.y, activationRadius, 0, 2 * Math.PI);
   overlayCtx.fillStyle = touchingButton
-    ? "rgba(250, 204, 21, 0.25)" // amarillo suave cuando lo toca
-    : "rgba(22, 163, 74, 0.18)";  // verde suave normal
+    ? "rgba(250, 204, 21, 0.25)"
+    : "rgba(22, 163, 74, 0.18)";
   overlayCtx.strokeStyle = touchingButton ? "#facc15" : "#22c55e";
   overlayCtx.lineWidth = 3;
   overlayCtx.fill();
   overlayCtx.stroke();
 
-  // Círculo central del botón
   overlayCtx.beginPath();
   overlayCtx.arc(buttonCenter.x, buttonCenter.y, 8, 0, 2 * Math.PI);
   overlayCtx.fillStyle = touchingButton ? "#facc15" : "#22c55e";
   overlayCtx.fill();
 
-  // Dibujar punto del índice
+  // Punto del índice
   overlayCtx.beginPath();
   overlayCtx.arc(ix, iy, 10, 0, 2 * Math.PI);
-  overlayCtx.fillStyle = touchingButton ? "#facc15" : "#38bdf8";
+  overlayCtx.fillStyle = touchingButton ? "#fbbf24" : "#38bdf8";
   overlayCtx.fill();
 
-  // Mapear la posición del índice a rotación
-  const normX = indexTip.x - 0.5; // -0.5 a 0.5
+  // Rotación con la mano
+  const normX = indexTip.x - 0.5;
   const normY = indexTip.y - 0.5;
 
-  targetRotY = normX * Math.PI; // rotación horizontal
-  targetRotX = normY * Math.PI; // rotación vertical
+  targetRotY = normX * Math.PI;
+  targetRotX = normY * Math.PI;
 
-  // "Tocar" el botón con el dedo para cambiar de figura
-  if (!shapeChangeCooldown && touchingButton) {
+  // Clic gestual sobre el botón → cambio de figura
+  if (!shapeChangeCooldown && clickActive && touchingButton) {
     shapeChangeCooldown = true;
     cycleShape();
     setTimeout(() => {
       shapeChangeCooldown = false;
-    }, 700); // pequeña pausa para no cambiar muchas veces
+    }, 700);
   }
 }
 
-// Inicializar MediaPipe Hands
+// Inicializar MediaPipe
 const hands = new Hands({
   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
 });
@@ -366,7 +388,7 @@ hands.setOptions({
 hands.onResults(onResults);
 
 // =========================
-// 4. Activar cámara con CameraUtils
+// 4. Cámara
 // =========================
 async function startCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
