@@ -58,7 +58,7 @@ mesh = createMesh(currentShape);
 scene.add(mesh);
 
 // =========================
-// Plano cartesiano 3D extra
+// Plano cartesiano 3D
 // =========================
 const axesHelper = new THREE.AxesHelper(3);
 scene.add(axesHelper);
@@ -66,30 +66,6 @@ scene.add(axesHelper);
 const gridHelper = new THREE.GridHelper(10, 20, 0x444444, 0x222222);
 gridHelper.rotation.x = Math.PI / 2;
 scene.add(gridHelper);
-
-// Etiquetas de ejes
-const fontLoader = new THREE.FontLoader();
-fontLoader.load(
-  "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json",
-  (font) => {
-    const textMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-
-    function addLabel(text, x, y, z) {
-      const geo = new THREE.TextGeometry(text, {
-        font,
-        size: 0.2,
-        height: 0.02
-      });
-      const labelMesh = new THREE.Mesh(geo, textMat);
-      labelMesh.position.set(x, y, z);
-      scene.add(labelMesh);
-    }
-
-    addLabel("X", 3.4, 0, 0);
-    addLabel("Y", 0, 3.4, 0);
-    addLabel("Z", 0, 0, 3.4);
-  }
-);
 
 // Variables de rotación controladas por la mano
 let targetRotX = mesh.rotation.x;
@@ -162,9 +138,11 @@ function updateHUDForShape() {
   formulaExplainEl.innerHTML = "";
 
   if (controlLadoDiv) controlLadoDiv.style.display = currentShape === "cubo" ? "flex" : "none";
-  if (controlRadioDiv) controlRadioDiv.style.display =
-    currentShape === "esfera" || currentShape === "cilindro" ? "flex" : "none";
-  if (controlAlturaDiv) controlAlturaDiv.style.display = currentShape === "cilindro" ? "flex" : "none";
+  if (controlRadioDiv)
+    controlRadioDiv.style.display =
+      currentShape === "esfera" || currentShape === "cilindro" ? "flex" : "none";
+  if (controlAlturaDiv)
+    controlAlturaDiv.style.display = currentShape === "cilindro" ? "flex" : "none";
 
   if (currentShape === "cubo") {
     shapeNameEl.textContent = "Cubo";
@@ -436,9 +414,7 @@ function handleSceneClick(ix, iy) {
   }
 
   if (modoActual === "crear-punto") {
-    if (hitPoint) {
-      crearPunto(hitPoint.x, hitPoint.y, hitPoint.z);
-    }
+    if (hitPoint) crearPunto(hitPoint.x, hitPoint.y, hitPoint.z);
     return;
   }
 
