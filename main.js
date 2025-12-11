@@ -9,16 +9,15 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x020617);
 
 const camera3D = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
-// Cámara un poco elevada pero apuntando al centro
 camera3D.position.set(0, 1.2, 7);
 camera3D.lookAt(0, 0, 0);
 
-// Control de zoom de la cámara (ahora solo con botones)
+// Control de zoom de la cámara (solo con botones)
 let cameraZoom = camera3D.position.z;
 const minZoom = 4;
 const maxZoom = 40;
 
-// Luces (compartidas para ambos modos)
+// Luces globales
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
 dirLight.position.set(4, 6, 8);
 scene.add(dirLight);
@@ -29,12 +28,22 @@ const mathGroup = new THREE.Group();
 mathGroup.position.set(0, 0, 0);
 
 const astroGroup = new THREE.Group();
+const artsGroup = new THREE.Group();
 
 scene.add(mathGroup);
 scene.add(astroGroup);
+scene.add(artsGroup);
 
-// Sujeto actual: "math" o "science"
+// Sujeto actual: "math" | "science" | "arts"
 let currentSubject = "math";
+
+// Overlay de carga
+const loadingOverlay = document.getElementById("loading-overlay");
+function hideLoading() {
+  if (loadingOverlay && !loadingOverlay.classList.contains("hidden")) {
+    loadingOverlay.classList.add("hidden");
+  }
+}
 
 // =========================
 // 2. Textura circular para estrellas
@@ -70,11 +79,10 @@ const starCircleTexture = createCircleTexture();
 // 3. Matemáticas: figura 3D + herramientas
 // =========================
 
-// Figura 3D (inicialmente cubo)
 let mesh;
 let currentShape = "cubo";
 
-// Dimensiones (en unidades arbitrarias)
+// Dimensiones
 const dims = {
   lado: 1.5,
   radio: 1,
@@ -103,7 +111,7 @@ function createMesh(shape) {
   const geometry = createGeometryFor(shape);
   const newMesh = new THREE.Mesh(geometry, material);
   newMesh.rotation.set(0.4, -0.4, 0.1);
-  newMesh.position.set(0, 0, 0); // centrado en el origen
+  newMesh.position.set(0, 0, 0);
   newMesh.userData.type = "figura";
   return newMesh;
 }
@@ -111,22 +119,20 @@ function createMesh(shape) {
 mesh = createMesh(currentShape);
 mathGroup.add(mesh);
 
-// Plano cartesiano (ejes + grilla)
+// Ejes y grilla
 const axesHelper = new THREE.AxesHelper(4);
 mathGroup.add(axesHelper);
 
 const gridHelper = new THREE.GridHelper(12, 24, 0x444444, 0x222222);
-// Grilla como piso ligeramente bajo la figura
-gridHelper.rotation.x = 0;
 gridHelper.position.y = -1;
 mathGroup.add(gridHelper);
 
-// Variables de rotación controladas por la mano
+// Rotación controlada por mano
 let targetRotX = mesh.rotation.x;
 let targetRotY = mesh.rotation.y;
 
 // =========================
-// 4. HUD y controles (solo Matemáticas)
+// 4. HUD y controles (Math)
 // =========================
 const shapeNameEl = document.getElementById("shape-name");
 const rotationInfoEl = document.getElementById("rotation-info");
@@ -162,11 +168,11 @@ function applyScaleFromDimensions() {
   } else if (currentShape === "cilindro") {
     const r = dims.radio;
     const h = dims.altura;
-    mesh.scale.set(r, h, r); // radio en X/Z, altura en Y
+    mesh.scale.set(r, h, r);
   }
 }
 
-// Calcular volumen
+// Volumen
 function updateVolume() {
   let V = 0;
   if (currentShape === "cubo") {
@@ -186,7 +192,7 @@ function updateVolume() {
   }
 }
 
-// Actualizar HUD según figura
+// HUD por figura
 function updateHUDForShape() {
   if (!shapeNameEl || !formulaTextEl || !formulaExplainEl) return;
 
@@ -243,13 +249,13 @@ window.addEventListener("resize", onResize);
 onResize();
 
 // =========================
-// 6. Extras interactivos 3D (Matemáticas)
+// 6. Interactivos 3D (Math)
 // =========================
 let objSeleccionado = null;
 let puntos = [];
 let vectores = [];
 let planos = [];
-let modoActual = "figura";   // "figura", "crear-punto", "crear-vector", "crear-plano", "borrar", "reset"
+let modoActual = "figura"; // "figura", "crear-punto", "crear-vector", "crear-plano", "borrar", "reset"
 
 let vectorPointsBuffer = [];
 let planePointsBuffer = [];
@@ -290,7 +296,7 @@ function resetSceneExtras() {
 
 function deleteSelectedObject() {
   if (!objSeleccionado) return;
-  if (objSeleccionado === mesh) return; // no borrar la figura principal
+  if (objSeleccionado === mesh) return;
 
   mathGroup.remove(objSeleccionado);
   puntos = puntos.filter(p => p !== objSeleccionado);
@@ -299,7 +305,7 @@ function deleteSelectedObject() {
   objSeleccionado = null;
 }
 
-/* Menú lateral holográfico: herramientas */
+// Menú holográfico
 const menuItems = document.querySelectorAll(".menu-item");
 
 function setToolMode(tool, clickedItem) {
@@ -315,10 +321,12 @@ function setToolMode(tool, clickedItem) {
   if (tool === "figura") {
     mesh.visible = true;
     resetSceneExtras();
-  } else if (tool === "crear-punto" ||
-             tool === "crear-vector" ||
-             tool === "crear-plano" ||
-             tool === "borrar") {
+  } else if (
+    tool === "crear-punto" ||
+    tool === "crear-vector" ||
+    tool === "crear-plano" ||
+    tool === "borrar"
+  ) {
     mesh.visible = false;
   } else if (tool === "reset") {
     mesh.visible = true;
@@ -338,37 +346,44 @@ menuItems.forEach(item => {
 });
 
 // =========================
-// 7. Pestañas de área (Matemáticas / Ciencias)
+// 7. Pestañas de área
 // =========================
 const subjectTabs = document.querySelectorAll(".subject-tab");
 
 function updateSubjectVisibility() {
-  mathGroup.visible = (currentSubject === "math");
-  astroGroup.visible = (currentSubject === "science");
+  mathGroup.visible = currentSubject === "math";
+  astroGroup.visible = currentSubject === "science";
+  artsGroup.visible = currentSubject === "arts";
 }
 
 subjectTabs.forEach(tab => {
   tab.addEventListener("click", () => {
-    if (tab.disabled) return;
+    const subject = tab.dataset.subject;
 
     subjectTabs.forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
 
-    const subject = tab.dataset.subject;
     if (subject === "math") {
       currentSubject = "math";
       if (modeBadgeEl) modeBadgeEl.textContent = "Math Mode";
-      hudEl.style.display = "block";
+      if (hudEl) hudEl.style.display = "block";
 
       const figuraItem = Array.from(menuItems).find(i => i.dataset.tool === "figura");
       setToolMode("figura", figuraItem);
     } else if (subject === "science") {
       currentSubject = "science";
       if (modeBadgeEl) modeBadgeEl.textContent = "Science: Astronomía";
-      hudEl.style.display = "none";
+      if (hudEl) hudEl.style.display = "none";
 
       setToolMode(null, null);
       ensureAstronomyScene();
+    } else if (subject === "arts") {
+      currentSubject = "arts";
+      if (modeBadgeEl) modeBadgeEl.textContent = "Arts: Pintura 3D";
+      if (hudEl) hudEl.style.display = "none";
+
+      setToolMode(null, null);
+      ensureArtsScene();
     }
 
     updateSubjectVisibility();
@@ -376,7 +391,7 @@ subjectTabs.forEach(tab => {
 });
 
 // =========================
-// 8. Astronomía: galaxia + estrellas + planetas
+// 8. Astronomía
 // =========================
 let astroCreated = false;
 let galaxyMesh = null;
@@ -474,7 +489,6 @@ function createPlanetarySystem() {
   star.userData.type = "star";
   astroGroup.add(star);
 
-  // Configuración más realista: órbitas elípticas, inclinación y rotación propia
   const configs = [
     {
       radius: 3,
@@ -527,7 +541,6 @@ function createPlanetarySystem() {
     planet.userData.inclination = cfg.inclination;
     planet.userData.spinSpeed = cfg.spinSpeed;
 
-    // Aplicar inclinación del plano orbital
     planet.rotation.z = cfg.tilt;
     astroGroup.add(planet);
     planets.push(planet);
@@ -543,7 +556,93 @@ function ensureAstronomyScene() {
 }
 
 // =========================
-// 9. Animación principal
+// 9. Artes: lienzo 3D pintable
+// =========================
+let artsCreated = false;
+let artCanvas = null;
+let artStrokes = [];
+let currentBrushColor = 0xff6b9b; // color base
+
+function ensureArtsScene() {
+  if (artsCreated) return;
+
+  // Lienzo (como cuadro 3D)
+  const canvasGeo = new THREE.PlaneGeometry(6, 4, 1, 1);
+  const canvasMat = new THREE.MeshStandardMaterial({
+    color: 0xf9fafb,
+    roughness: 0.8,
+    metalness: 0.05
+  });
+  artCanvas = new THREE.Mesh(canvasGeo, canvasMat);
+  artCanvas.position.set(0, 0.5, 0);
+  artCanvas.rotation.y = 0;
+  artCanvas.userData.type = "art-canvas";
+  artsGroup.add(artCanvas);
+
+  // Marco del cuadro
+  const frameGeo = new THREE.BoxGeometry(6.2, 4.2, 0.1);
+  const frameMat = new THREE.MeshStandardMaterial({
+    color: 0x111827,
+    metalness: 0.4,
+    roughness: 0.4
+  });
+  const frame = new THREE.Mesh(frameGeo, frameMat);
+  frame.position.copy(artCanvas.position);
+  frame.position.z -= 0.06;
+  frame.userData.type = "art-frame";
+  artsGroup.add(frame);
+
+  // Luz adicional suave hacia el lienzo
+  const spot = new THREE.SpotLight(0xffffff, 1.1, 25, Math.PI / 4, 0.4, 1);
+  spot.position.set(0, 5, 8);
+  spot.target = artCanvas;
+  artsGroup.add(spot);
+  artsGroup.add(spot.target);
+
+  // Piso suave debajo del cuadro para dar volumen
+  const floorGeo = new THREE.PlaneGeometry(20, 20);
+  const floorMat = new THREE.MeshStandardMaterial({
+    color: 0x020617,
+    roughness: 1,
+    metalness: 0
+  });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -1.5;
+  floor.userData.type = "art-floor";
+  artsGroup.add(floor);
+
+  artsCreated = true;
+}
+
+// Cada click (pinch) en el lienzo crea un "trazo" 3D (cubito)
+function paintOnCanvas(hitPoint) {
+  if (!artCanvas) return;
+
+  const strokeSize = 0.15;
+  const geo = new THREE.BoxGeometry(strokeSize, strokeSize, 0.06);
+  const mat = new THREE.MeshStandardMaterial({
+    color: currentBrushColor,
+    roughness: 0.4,
+    metalness: 0.2
+  });
+  const stroke = new THREE.Mesh(geo, mat);
+
+  // Posición ligeramente separada del lienzo para que se vea relieve
+  const normal = new THREE.Vector3(0, 0, 1);
+  stroke.position.copy(hitPoint).addScaledVector(normal, 0.03);
+
+  // Rotación aleatoria ligera para que parezca trazo de pintura
+  stroke.rotation.z = (Math.random() - 0.5) * 0.6;
+  stroke.rotation.y = (Math.random() - 0.5) * 0.2;
+
+  stroke.userData.type = "art-stroke";
+  artsGroup.add(stroke);
+  artStrokes.push(stroke);
+}
+
+// =========================
+// 10. Animación principal
 // =========================
 function animate() {
   requestAnimationFrame(animate);
@@ -565,7 +664,7 @@ function animate() {
     }
   }
 
-  // Ciencias (Astronomía)
+  // Ciencias
   if (currentSubject === "science" && astroCreated) {
     astroGroup.rotation.y += (targetRotY - astroGroup.rotation.y) * 0.03;
     astroGroup.rotation.x += (targetRotX - astroGroup.rotation.x) * 0.03;
@@ -586,8 +685,6 @@ function animate() {
       const y = Math.sin(angle * 0.7) * p.userData.inclination * 10;
 
       p.position.set(x, y, z);
-
-      // Giro sobre su propio eje (rotación diurna)
       p.rotation.y += p.userData.spinSpeed;
     });
 
@@ -596,12 +693,18 @@ function animate() {
     }
   }
 
+  // Artes: rotación suave del grupo según gestos (como si giraras el cuadro en 3D)
+  if (currentSubject === "arts" && artsCreated) {
+    artsGroup.rotation.y += (targetRotY - artsGroup.rotation.y) * 0.08;
+    artsGroup.rotation.x += (targetRotX - artsGroup.rotation.x) * 0.04;
+  }
+
   renderer.render(scene, camera3D);
 }
 animate();
 
 // =========================
-// 10. Sliders HUD
+// 11. Sliders HUD (Math)
 // =========================
 function syncRangeAndNumber(rangeEl, numberEl, onChange) {
   if (!rangeEl || !numberEl) return;
@@ -662,7 +765,7 @@ if (hudToggleBtn && hudEl) {
 }
 
 // =========================
-// 11. Controles de ZOOM con botones
+// 12. Controles de ZOOM con botones
 // =========================
 const zoomInBtn = document.getElementById("zoom-in");
 const zoomOutBtn = document.getElementById("zoom-out");
@@ -675,12 +778,12 @@ function applyZoom(delta) {
 }
 
 if (zoomInBtn && zoomOutBtn) {
-  zoomInBtn.addEventListener("click", () => applyZoom(-1)); // acercar
-  zoomOutBtn.addEventListener("click", () => applyZoom(+1)); // alejar
+  zoomInBtn.addEventListener("click", () => applyZoom(-1));
+  zoomOutBtn.addEventListener("click", () => applyZoom(+1));
 }
 
 // =========================
-// 12. MediaPipe Hands
+// 13. MediaPipe Hands
 // =========================
 const videoElement = document.getElementById("input-video");
 const overlay = document.getElementById("overlay");
@@ -692,7 +795,7 @@ function resizeOverlay() {
 }
 window.addEventListener("resize", resizeOverlay);
 
-// Botón fijo en una esquina
+// Botón fijo
 const activationRadius = 35;
 const buttonCenter = { x: 0, y: 0 };
 
@@ -700,7 +803,6 @@ let clickActive = false;
 let clickProcessed = false;
 let shapeChangeCooldown = false;
 
-// helpers
 function isIndexOnButton(ix, iy) {
   const dx = ix - buttonCenter.x;
   const dy = iy - buttonCenter.y;
@@ -722,7 +824,7 @@ function isThumbExtended(landmarks) {
   const dx = thumbTip.x - wrist.x;
   const dy = thumbTip.y - wrist.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
-  return dist > 0.18; // heurístico sencillo
+  return dist > 0.18;
 }
 
 function cycleShape() {
@@ -745,6 +847,9 @@ function cycleShape() {
   updateHUDForShape();
 }
 
+// =========================
+// 14. Clicks en escena (Math + Arts)
+// =========================
 function handleSceneClick(ix, iy) {
   if (currentSubject === "science") return;
 
@@ -752,6 +857,22 @@ function handleSceneClick(ix, iy) {
   mouse.y = -(iy / overlay.height) * 2 + 1;
 
   raycaster.setFromCamera(mouse, camera3D);
+
+  if (currentSubject === "arts") {
+    const intersects = raycaster.intersectObjects(artsGroup.children, true);
+    if (intersects.length > 0) {
+      const obj = intersects[0].object;
+      const point = intersects[0].point;
+
+      // Solo pintamos si tocamos el lienzo
+      if (obj === artCanvas || obj.userData.type === "art-canvas") {
+        paintOnCanvas(point);
+      }
+    }
+    return;
+  }
+
+  // Matemáticas
   const intersects = raycaster.intersectObjects(mathGroup.children, true);
 
   let hitObject = null;
@@ -805,7 +926,7 @@ function onResults(results) {
   const ix = indexTip.x * overlay.width;
   const iy = indexTip.y * overlay.height;
 
-  // botón fijo
+  // botón fijo (arriba izquierda de la mini-cámara, pero relativo al overlay)
   const margin = 40;
   buttonCenter.x = margin;
   buttonCenter.y = margin;
@@ -836,7 +957,7 @@ function onResults(results) {
   overlayCtx.fillStyle = touchingButton ? "#fbbf24" : "#38bdf8";
   overlayCtx.fill();
 
-  // Rotación (siempre activa con el índice)
+  // Rotación (siempre activa)
   const normX = indexTip.x - 0.5;
   const normY = indexTip.y - 0.5;
   targetRotY = normX * Math.PI;
@@ -847,7 +968,6 @@ function onResults(results) {
     return;
   }
 
-  // Pinch corto = clic (cuando están MUY cerca)
   const clickThreshold = 0.035;
   if (thumbIndexDist < clickThreshold && !clickActive) {
     clickActive = true;
@@ -859,6 +979,7 @@ function onResults(results) {
     }, 200);
   }
 
+  // Cambio de figura con el botón verde (solo en Math)
   if (!shapeChangeCooldown && clickActive && touchingButton && currentSubject === "math" && !clickProcessed) {
     shapeChangeCooldown = true;
     cycleShape();
@@ -868,6 +989,7 @@ function onResults(results) {
     clickProcessed = true;
   }
 
+  // Clic "normal": interactuar con escena (Math o Arts)
   if (clickActive && !clickProcessed && !touchingButton) {
     handleSceneClick(ix, iy);
     clickProcessed = true;
@@ -889,29 +1011,35 @@ hands.setOptions({
 hands.onResults(onResults);
 
 // =========================
-// 13. Cámara
+// 15. Cámara
 // =========================
 async function startCamera() {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  videoElement.srcObject = stream;
-  await videoElement.play();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    videoElement.srcObject = stream;
+    await videoElement.play();
 
-  resizeOverlay();
+    resizeOverlay();
 
-  const camera = new Camera(videoElement, {
-    onFrame: async () => {
-      await hands.send({ image: videoElement });
-    },
-    width: 640,
-    height: 480
-  });
-  camera.start();
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        await hands.send({ image: videoElement });
+      },
+      width: 640,
+      height: 480
+    });
+    camera.start();
+
+    // Cuando la cámara está lista, quitamos el overlay de carga
+    hideLoading();
+  } catch (err) {
+    console.error("Error al iniciar cámara:", err);
+    alert("No se pudo acceder a la cámara. Revisa permisos del navegador.");
+    hideLoading();
+  }
 }
 
-startCamera().catch((err) => {
-  console.error("Error al iniciar cámara:", err);
-  alert("No se pudo acceder a la cámara. Revisa permisos del navegador.");
-});
+startCamera();
 
 // Estado inicial
 updateSubjectVisibility();
