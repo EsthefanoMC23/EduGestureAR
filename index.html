@@ -10,25 +10,49 @@
   <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
+  <!-- Extras de Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/FontLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/geometries/TextGeometry.js"></script>
+
   <!-- MediaPipe Hands -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 </head>
+
 <body>
+
   <div class="top-bar">
     <div class="brand">
       <span class="logo-dot"></span>
       <span class="brand-title">EduGesture <span class="brand-sub">AR</span></span>
     </div>
+
     <div class="top-info">
       <span>👋 Mueve tu mano para rotar la figura</span>
-      <span>🤏 Pulgar + índice = clic sobre el botón verde para cambiar de figura</span>
+      <span>🤏 Pinch = clic para interactuar</span>
+      <span>🟢 Toca el botón verde para cambiar de figura 3D</span>
     </div>
   </div>
 
   <div class="app-container">
-    <!-- Panel principal: Escena 3D + cámara mini + panel HUD -->
+
+    <!-- MENÚ LATERAL HOLOGRÁFICO -->
+    <div id="side-menu" class="side-menu">
+      <div class="menu-title">HoloTools</div>
+
+      <div class="menu-item" data-tool="crear-punto">⦿ Crear Punto</div>
+      <div class="menu-item" data-tool="crear-vector">➤ Crear Vector</div>
+      <div class="menu-item" data-tool="crear-plano">▦ Crear Plano</div>
+
+      <div class="menu-separator"></div>
+
+      <div class="menu-item" data-tool="borrar">✖ Borrar Selección</div>
+      <div class="menu-item" data-tool="reset">↺ Reset Escena</div>
+    </div>
+
+    <!-- PANEL 3D -->
     <div class="scene-panel">
+
       <div class="panel-header">
         <span class="panel-title">Escena 3D Educativa</span>
         <span class="panel-badge panel-badge-blue">Math Mode</span>
@@ -37,37 +61,39 @@
       <!-- Canvas 3D -->
       <canvas id="scene3d"></canvas>
 
-      <!-- Cámara mini con overlay de gestos -->
+      <!-- Cámara mini -->
       <div class="video-mini">
         <video id="input-video" playsinline></video>
         <canvas id="overlay"></canvas>
       </div>
 
-      <!-- Panel HUD desplegable -->
+      <!-- HUD educativo -->
       <div id="hud" class="hud">
         <div class="hud-top-row">
           <div class="hud-left">
+
             <div class="hud-row">
               <span class="hud-label">Figura actual:</span>
               <span id="shape-name" class="hud-value">Cubo</span>
             </div>
+
             <div class="hud-row">
-              <span class="hud-label">Rotación X / Y:</span>
+              <span class="hud-label">Rotación X/Y:</span>
               <span id="rotation-info" class="hud-value">0° / 0°</span>
             </div>
+
             <div class="hud-row">
-              <span class="hud-label">Volumen aproximado:</span>
+              <span class="hud-label">Volumen:</span>
               <span id="volume-value" class="hud-value">0 u³</span>
             </div>
+
           </div>
 
-          <button id="hud-toggle" class="hud-toggle-btn" type="button">
-            ▼
-          </button>
+          <button id="hud-toggle" class="hud-toggle-btn">▼</button>
         </div>
 
-        <!-- Controles de dimensiones -->
         <div class="hud-section hud-controls">
+
           <div id="control-lado" class="hud-control">
             <label class="control-label">Lado del cubo</label>
             <div class="control-inputs">
@@ -87,29 +113,22 @@
           </div>
 
           <div id="control-altura" class="hud-control">
-            <label class="control-label">Altura del cilindro</label>
+            <label class="control-label">Altura</label>
             <div class="control-inputs">
               <input id="altura-range" type="range" min="0.5" max="3" step="0.1" value="1.5" />
               <input id="altura-number" type="number" min="0.5" max="3" step="0.1" value="1.5" />
               <span class="control-unit">u</span>
             </div>
           </div>
+
         </div>
 
         <div class="hud-section">
           <div class="hud-label">Fórmula de volumen:</div>
-          <div id="formula-text" class="hud-formula">
-            V = lado³
-          </div>
-          <ul id="formula-explain" class="hud-explain">
-            <li><strong>V</strong>: volumen de la figura</li>
-            <li><strong>lado</strong>: longitud de cada arista del cubo</li>
-          </ul>
+          <div id="formula-text" class="hud-formula">V = lado³</div>
+          <ul id="formula-explain" class="hud-explain"></ul>
         </div>
 
-        <div class="hud-tip">
-          💡 Consejo: rota la figura moviendo tu mano frente a la cámara. Usa el gesto 🤏 sobre el botón verde fijo (arriba a la izquierda de la cámara) para cambiar de figura.
-        </div>
       </div>
     </div>
   </div>
