@@ -13,7 +13,7 @@ const camera3D = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
 camera3D.position.set(0, 1.2, 7);
 camera3D.lookAt(0, 0, 0);
 
-// Control de zoom de la cámara
+// Control de zoom de la cámara (ahora solo con botones)
 let cameraZoom = camera3D.position.z;
 const minZoom = 4;
 const maxZoom = 40;
@@ -474,26 +474,61 @@ function createPlanetarySystem() {
   star.userData.type = "star";
   astroGroup.add(star);
 
+  // Configuración más realista: órbitas elípticas, inclinación y rotación propia
   const configs = [
-    { radius: 0.25, orbit: 3, speed: 0.9, color: 0x4b9fff },
-    { radius: 0.35, orbit: 5, speed: 0.6, color: 0xff854b },
-    { radius: 0.5, orbit: 7, speed: 0.35, color: 0x7cffb0 }
+    {
+      radius: 3,
+      radiusZ: 2.2,
+      planetRadius: 0.25,
+      speed: 0.9,
+      color: 0x4b9fff,
+      tilt: 0.2,
+      inclination: 0.05,
+      spinSpeed: 0.02
+    },
+    {
+      radius: 5,
+      radiusZ: 3.5,
+      planetRadius: 0.35,
+      speed: 0.6,
+      color: 0xff854b,
+      tilt: 0.4,
+      inclination: -0.08,
+      spinSpeed: 0.018
+    },
+    {
+      radius: 7,
+      radiusZ: 5.4,
+      planetRadius: 0.5,
+      speed: 0.35,
+      color: 0x7cffb0,
+      tilt: 0.1,
+      inclination: 0.12,
+      spinSpeed: 0.015
+    }
   ];
 
   planets = [];
 
   configs.forEach(cfg => {
-    const geo = new THREE.SphereGeometry(cfg.radius, 32, 32);
+    const geo = new THREE.SphereGeometry(cfg.planetRadius, 32, 32);
     const mat = new THREE.MeshStandardMaterial({
       color: cfg.color,
       roughness: 0.6,
       metalness: 0.1
     });
     const planet = new THREE.Mesh(geo, mat);
-    planet.userData.orbitRadius = cfg.orbit;
+    planet.userData.orbitRadiusX = cfg.radius;
+    planet.userData.orbitRadiusZ = cfg.radiusZ;
     planet.userData.orbitSpeed = cfg.speed;
     planet.userData.orbitAngle = Math.random() * Math.PI * 2;
     planet.userData.type = "planet";
+    planet.userData.tilt = cfg.tilt;
+    planet.userData.inclination = cfg.inclination;
+    planet.userData.spinSpeed = cfg.spinSpeed;
+
+    // Aplicar inclinación del plano orbital
+    planet.rotation.z = cfg.tilt;
     astroGroup.add(planet);
     planets.push(planet);
   });
@@ -542,13 +577,18 @@ function animate() {
 
     planets.forEach(p => {
       p.userData.orbitAngle += 0.0015 * p.userData.orbitSpeed;
-      const r = p.userData.orbitRadius;
-      p.position.set(
-        Math.cos(p.userData.orbitAngle) * r,
-        0,
-        Math.sin(p.userData.orbitAngle) * r
-      );
-      p.rotation.y += 0.01;
+      const ax = p.userData.orbitRadiusX;
+      const az = p.userData.orbitRadiusZ;
+
+      const angle = p.userData.orbitAngle;
+      const x = Math.cos(angle) * ax;
+      const z = Math.sin(angle) * az;
+      const y = Math.sin(angle * 0.7) * p.userData.inclination * 10;
+
+      p.position.set(x, y, z);
+
+      // Giro sobre su propio eje (rotación diurna)
+      p.rotation.y += p.userData.spinSpeed;
     });
 
     if (starField) {
@@ -622,7 +662,25 @@ if (hudToggleBtn && hudEl) {
 }
 
 // =========================
-// 11. MediaPipe Hands
+// 11. Controles de ZOOM con botones
+// =========================
+const zoomInBtn = document.getElementById("zoom-in");
+const zoomOutBtn = document.getElementById("zoom-out");
+
+function applyZoom(delta) {
+  cameraZoom += delta;
+  if (cameraZoom < minZoom) cameraZoom = minZoom;
+  if (cameraZoom > maxZoom) cameraZoom = maxZoom;
+  camera3D.position.z = cameraZoom;
+}
+
+if (zoomInBtn && zoomOutBtn) {
+  zoomInBtn.addEventListener("click", () => applyZoom(-1)); // acercar
+  zoomOutBtn.addEventListener("click", () => applyZoom(+1)); // alejar
+}
+
+// =========================
+// 12. MediaPipe Hands
 // =========================
 const videoElement = document.getElementById("input-video");
 const overlay = document.getElementById("overlay");
@@ -641,7 +699,6 @@ const buttonCenter = { x: 0, y: 0 };
 let clickActive = false;
 let clickProcessed = false;
 let shapeChangeCooldown = false;
-let prevZoomDist = null;
 
 // helpers
 function isIndexOnButton(ix, iy) {
@@ -739,7 +796,6 @@ function onResults(results) {
   overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 
   if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
-    prevZoomDist = null;
     return;
   }
 
@@ -786,13 +842,12 @@ function onResults(results) {
   targetRotY = normX * Math.PI;
   targetRotX = normY * Math.PI;
 
-  // Si el pulgar no está extendido, no hay clic ni zoom
+  // Si el pulgar no está extendido, no hay clic
   if (!thumbExtended) {
-    prevZoomDist = null;
     return;
   }
 
-  // 1) Pinch corto = clic (cuando están MUY cerca)
+  // Pinch corto = clic (cuando están MUY cerca)
   const clickThreshold = 0.035;
   if (thumbIndexDist < clickThreshold && !clickActive) {
     clickActive = true;
@@ -817,25 +872,6 @@ function onResults(results) {
     handleSceneClick(ix, iy);
     clickProcessed = true;
   }
-
-  // 2) Zoom con los dedos separados (sin tocar botón verde)
-  const zoomMin = 0.06;
-  const zoomMax = 0.35;
-
-  if (!touchingButton && thumbIndexDist > zoomMin && thumbIndexDist < zoomMax) {
-    if (prevZoomDist !== null) {
-      const delta = thumbIndexDist - prevZoomDist;
-      if (Math.abs(delta) > 0.002) {
-        cameraZoom -= delta * 40; // sensibilidad
-        if (cameraZoom < minZoom) cameraZoom = minZoom;
-        if (cameraZoom > maxZoom) cameraZoom = maxZoom;
-        camera3D.position.z = cameraZoom;
-      }
-    }
-    prevZoomDist = thumbIndexDist;
-  } else {
-    prevZoomDist = null;
-  }
 }
 
 // Inicializar MediaPipe
@@ -853,7 +889,7 @@ hands.setOptions({
 hands.onResults(onResults);
 
 // =========================
-// 12. Cámara
+// 13. Cámara
 // =========================
 async function startCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
