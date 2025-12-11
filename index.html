@@ -1,1 +1,31 @@
-a
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>EduGesture AR - MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+  <!-- MediaPipe Hands -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <div class="video-panel">
+      <video id="input-video" playsinline></video>
+      <canvas id="overlay"></canvas>
+    </div>
+
+    <div class="scene-panel">
+      <canvas id="scene3d"></canvas>
+    </div>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+</html>
