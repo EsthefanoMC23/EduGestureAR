@@ -167,9 +167,59 @@ body {
   color: #e5e7eb;
 }
 
+/* Secciones de HUD */
+
 .hud-section {
   margin-top: 4px;
 }
+
+/* Controles de dimensiones */
+
+.hud-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.hud-control {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.control-label {
+  font-size: 0.75rem;
+  color: #bfdbfe;
+}
+
+.control-inputs {
+  display: grid;
+  grid-template-columns: 1fr 70px auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.control-inputs input[type="range"] {
+  width: 100%;
+}
+
+.control-inputs input[type="number"] {
+  width: 100%;
+  padding: 2px 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  font-size: 0.75rem;
+}
+
+.control-unit {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* Fórmulas */
 
 .hud-formula {
   margin-top: 2px;
