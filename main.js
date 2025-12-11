@@ -192,7 +192,7 @@ let objSeleccionado = null;
 let puntos = [];
 let vectores = [];
 let planos = [];
-let modoActual = null;
+let modoActual = "figura";   // Figura 3D por defecto
 let vectorPointsBuffer = [];
 let planePointsBuffer = [];
 
@@ -241,21 +241,48 @@ function deleteSelectedObject() {
   objSeleccionado = null;
 }
 
-// Menú lateral holográfico
+/* Menú lateral holográfico: modos */
 const menuItems = document.querySelectorAll(".menu-item");
+
+function setToolMode(tool, clickedItem) {
+  // actualizar clases
+  menuItems.forEach(i => i.classList.remove("active"));
+  if (clickedItem) clickedItem.classList.add("active");
+
+  modoActual = tool;
+
+  if (tool === "figura") {
+    // Modo figura 3D: mostrar figura y limpiar extras
+    mesh.visible = true;
+    resetSceneExtras();
+  } else {
+    // Cualquier otro modo: ocultar figura
+    mesh.visible = false;
+
+    if (tool === "reset") {
+      resetSceneExtras();
+    } else if (tool === "borrar") {
+      // borrar se maneja con clic (pinch) en la escena
+    }
+  }
+}
+
+// listeners de menú
 menuItems.forEach(item => {
   item.addEventListener("click", () => {
-    menuItems.forEach(i => i.classList.remove("active"));
-    item.classList.add("active");
-    modoActual = item.dataset.tool;
+    const tool = item.dataset.tool;
+    setToolMode(tool, item);
+  });
+});
 
-    if (modoActual === "reset") {
-      resetSceneExtras();
-    } else if (modoActual === "borrar") {
-      if (objSeleccionado) {
-        deleteSelectedObject();
-      }
-    }
+// Pestañas de área (por ahora solo matemáticas activa)
+const subjectTabs = document.querySelectorAll(".subject-tab");
+subjectTabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    if (tab.disabled) return;
+    subjectTabs.forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    // En el futuro: según el área mostramos diferentes HoloTools
   });
 });
 
@@ -263,12 +290,12 @@ menuItems.forEach(item => {
 function animate() {
   requestAnimationFrame(animate);
 
-  if (objSeleccionado && objSeleccionado !== mesh) {
-    objSeleccionado.rotation.x += (targetRotX - objSeleccionado.rotation.x) * 0.1;
-    objSeleccionado.rotation.y += (targetRotY - objSeleccionado.rotation.y) * 0.1;
-  } else {
+  if (modoActual === "figura" || !objSeleccionado || objSeleccionado === mesh) {
     mesh.rotation.x += (targetRotX - mesh.rotation.x) * 0.1;
     mesh.rotation.y += (targetRotY - mesh.rotation.y) * 0.1;
+  } else {
+    objSeleccionado.rotation.x += (targetRotX - objSeleccionado.rotation.x) * 0.1;
+    objSeleccionado.rotation.y += (targetRotY - objSeleccionado.rotation.y) * 0.1;
   }
 
   const degX = (mesh.rotation.x * 180 / Math.PI).toFixed(0);
@@ -438,7 +465,7 @@ function handleSceneClick(ix, iy) {
     return;
   }
 
-  // por defecto: seleccionar objeto para rotarlo
+  // En modo figura o cualquier otro: seleccionar objeto
   objSeleccionado = hitObject || null;
 }
 
