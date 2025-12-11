@@ -11,6 +11,11 @@ scene.background = new THREE.Color(0x020617);
 const camera3D = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
 camera3D.position.set(0, 3, 8);
 
+// Control de zoom de la cámara
+let cameraZoom = camera3D.position.z;
+const minZoom = 4;
+const maxZoom = 40;
+
 // Luces (compartidas para ambos modos)
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
 dirLight.position.set(4, 6, 8);
@@ -28,7 +33,37 @@ scene.add(astroGroup);
 let currentSubject = "math";
 
 // =========================
-// 2. Matemáticas: figura 3D + herramientas
+// 2. Textura circular para estrellas
+// =========================
+function createCircleTexture() {
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0, 0, size, size);
+  const gradient = ctx.createRadialGradient(
+    size / 2, size / 2, 0,
+    size / 2, size / 2, size / 2
+  );
+  gradient.addColorStop(0, "rgba(255,255,255,1)");
+  gradient.addColorStop(0.4, "rgba(255,255,255,0.9)");
+  gradient.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+const starCircleTexture = createCircleTexture();
+
+// =========================
+// 3. Matemáticas: figura 3D + herramientas
 // =========================
 
 // Figura 3D (inicialmente cubo)
@@ -84,7 +119,7 @@ let targetRotX = mesh.rotation.x;
 let targetRotY = mesh.rotation.y;
 
 // =========================
-// 3. HUD y controles (solo Matemáticas)
+// 4. HUD y controles (solo Matemáticas)
 // =========================
 const shapeNameEl = document.getElementById("shape-name");
 const rotationInfoEl = document.getElementById("rotation-info");
@@ -188,7 +223,7 @@ function updateHUDForShape() {
 updateHUDForShape();
 
 // =========================
-// 4. Layout y resize
+// 5. Layout y resize
 // =========================
 function onResize() {
   const width = sceneCanvas.clientWidth;
@@ -201,7 +236,7 @@ window.addEventListener("resize", onResize);
 onResize();
 
 // =========================
-// 5. Extras interactivos 3D (Matemáticas)
+// 6. Extras interactivos 3D (Matemáticas)
 // =========================
 let objSeleccionado = null;
 let puntos = [];
@@ -271,27 +306,23 @@ function setToolMode(tool, clickedItem) {
   modoActual = tool;
 
   if (tool === "figura") {
-    // Modo figura 3D: mostrar figura y limpiar extras
     mesh.visible = true;
     resetSceneExtras();
   } else if (tool === "crear-punto" ||
              tool === "crear-vector" ||
              tool === "crear-plano" ||
              tool === "borrar") {
-    // Cualquier otro modo: ocultar figura
     mesh.visible = false;
   } else if (tool === "reset") {
     mesh.visible = true;
     resetSceneExtras();
   } else if (tool === null) {
-    // Usado cuando cambiamos de asignatura
     modoActual = null;
     mesh.visible = false;
     menuItems.forEach(i => i.classList.remove("active"));
   }
 }
 
-// listeners de menú
 menuItems.forEach(item => {
   item.addEventListener("click", () => {
     const tool = item.dataset.tool;
@@ -300,7 +331,7 @@ menuItems.forEach(item => {
 });
 
 // =========================
-// 6. Pestañas de área (Matemáticas / Ciencias)
+// 7. Pestañas de área (Matemáticas / Ciencias)
 // =========================
 const subjectTabs = document.querySelectorAll(".subject-tab");
 
@@ -322,7 +353,6 @@ subjectTabs.forEach(tab => {
       if (modeBadgeEl) modeBadgeEl.textContent = "Math Mode";
       hudEl.style.display = "block";
 
-      // Volver a figura 3D por defecto
       const figuraItem = Array.from(menuItems).find(i => i.dataset.tool === "figura");
       setToolMode("figura", figuraItem);
     } else if (subject === "science") {
@@ -330,7 +360,6 @@ subjectTabs.forEach(tab => {
       if (modeBadgeEl) modeBadgeEl.textContent = "Science: Astronomía";
       hudEl.style.display = "none";
 
-      // Sin herramientas de matemáticas activas
       setToolMode(null, null);
       ensureAstronomyScene();
     }
@@ -340,7 +369,7 @@ subjectTabs.forEach(tab => {
 });
 
 // =========================
-// 7. Astronomía: galaxia + estrellas + planetas
+// 8. Astronomía: galaxia + estrellas + planetas
 // =========================
 let astroCreated = false;
 let galaxyMesh = null;
@@ -348,11 +377,11 @@ let starField = null;
 let planets = [];
 
 function createStarField() {
-  const starCount = 3000;
+  const starCount = 3500;
   const positions = new Float32Array(starCount * 3);
 
   for (let i = 0; i < starCount; i++) {
-    const r = 60 * Math.random();
+    const r = 70 * Math.random();
     const theta = 2 * Math.PI * Math.random();
     const phi = Math.acos(2 * Math.random() - 1);
 
@@ -369,11 +398,14 @@ function createStarField() {
   geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
   const mat = new THREE.PointsMaterial({
+    map: starCircleTexture,
     color: 0xffffff,
-    size: 0.08,
+    size: 0.12,
     sizeAttenuation: true,
     transparent: true,
-    opacity: 0.9
+    opacity: 0.95,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
   });
 
   starField = new THREE.Points(geo, mat);
@@ -383,8 +415,8 @@ function createStarField() {
 
 function createGalaxy() {
   const arms = 4;
-  const starsPerArm = 900;
-  const radius = 18;
+  const starsPerArm = 1100;
+  const radius = 22;
 
   const positions = new Float32Array(arms * starsPerArm * 3);
   let idx = 0;
@@ -393,11 +425,11 @@ function createGalaxy() {
     const armOffset = (a / arms) * Math.PI * 2;
     for (let i = 0; i < starsPerArm; i++) {
       const r = (i / starsPerArm) * radius;
-      const angle = r * 0.5 + armOffset; // curva en espiral
-      const spread = 0.7;
+      const angle = r * 0.5 + armOffset;
+      const spread = 0.9;
 
       const x = r * Math.cos(angle) + (Math.random() - 0.5) * spread;
-      const y = (Math.random() - 0.5) * spread * 0.4;
+      const y = (Math.random() - 0.5) * spread * 0.35;
       const z = r * Math.sin(angle) + (Math.random() - 0.5) * spread;
 
       positions[idx++] = x;
@@ -410,10 +442,13 @@ function createGalaxy() {
   geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
   const mat = new THREE.PointsMaterial({
+    map: starCircleTexture,
     color: 0x9fdbff,
-    size: 0.06,
+    size: 0.1,
     transparent: true,
-    opacity: 0.95
+    opacity: 1,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
   });
 
   galaxyMesh = new THREE.Points(geo, mat);
@@ -422,18 +457,16 @@ function createGalaxy() {
 }
 
 function createPlanetarySystem() {
-  // estrella central
   const starGeo = new THREE.SphereGeometry(0.9, 32, 32);
   const starMat = new THREE.MeshBasicMaterial({
     color: 0xfff3b0,
     emissive: 0xffdd88,
-    emissiveIntensity: 2.0
+    emissiveIntensity: 2.2
   });
   const star = new THREE.Mesh(starGeo, starMat);
   star.userData.type = "star";
   astroGroup.add(star);
 
-  // planetas
   const configs = [
     { radius: 0.25, orbit: 3, speed: 0.9, color: 0x4b9fff },
     { radius: 0.35, orbit: 5, speed: 0.6, color: 0xff854b },
@@ -466,12 +499,12 @@ function ensureAstronomyScene() {
 }
 
 // =========================
-// 8. Animación principal
+// 9. Animación principal
 // =========================
 function animate() {
   requestAnimationFrame(animate);
 
-  // Matemáticas: rotar figura / objeto seleccionado
+  // Matemáticas
   if (currentSubject === "math") {
     if (modoActual === "figura" || !objSeleccionado || objSeleccionado === mesh) {
       mesh.rotation.x += (targetRotX - mesh.rotation.x) * 0.1;
@@ -488,9 +521,8 @@ function animate() {
     }
   }
 
-  // Astronomía: animar galaxia y planetas + girar el conjunto con la mano
+  // Ciencias (Astronomía)
   if (currentSubject === "science" && astroCreated) {
-    // rotación suave del conjunto según la mano
     astroGroup.rotation.y += (targetRotY - astroGroup.rotation.y) * 0.03;
     astroGroup.rotation.x += (targetRotX - astroGroup.rotation.x) * 0.03;
 
@@ -520,7 +552,7 @@ function animate() {
 animate();
 
 // =========================
-// 9. Sincronizar sliders / inputs numéricos
+// 10. Sliders HUD
 // =========================
 function syncRangeAndNumber(rangeEl, numberEl, onChange) {
   if (!rangeEl || !numberEl) return;
@@ -581,7 +613,7 @@ if (hudToggleBtn && hudEl) {
 }
 
 // =========================
-// 10. MediaPipe Hands
+// 11. MediaPipe Hands
 // =========================
 const videoElement = document.getElementById("input-video");
 const overlay = document.getElementById("overlay");
@@ -593,15 +625,16 @@ function resizeOverlay() {
 }
 window.addEventListener("resize", resizeOverlay);
 
-// Botón fijo en una esquina (lado superior izquierdo)
+// Botón fijo en una esquina
 const activationRadius = 35;
 const buttonCenter = { x: 0, y: 0 };
 
-// estados de clic por pinch
 let clickActive = false;
 let clickProcessed = false;
 let shapeChangeCooldown = false;
+let prevZoomDist = null;
 
+// helpers
 function isIndexOnButton(ix, iy) {
   const dx = ix - buttonCenter.x;
   const dy = iy - buttonCenter.y;
@@ -609,13 +642,21 @@ function isIndexOnButton(ix, iy) {
   return dist < activationRadius;
 }
 
-function detectPinch(landmarks) {
+function detectPinchDistance(landmarks) {
   const thumb = landmarks[4];
   const index = landmarks[8];
   const dx = thumb.x - index.x;
   const dy = thumb.y - index.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function isThumbExtended(landmarks) {
+  const thumbTip = landmarks[4];
+  const wrist = landmarks[0];
+  const dx = thumbTip.x - wrist.x;
+  const dy = thumbTip.y - wrist.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
-  return dist < 0.04;
+  return dist > 0.18; // heurístico sencillo
 }
 
 function cycleShape() {
@@ -638,12 +679,8 @@ function cycleShape() {
   updateHUDForShape();
 }
 
-// Procesar clic en la escena (no botón verde)
 function handleSceneClick(ix, iy) {
-  if (currentSubject === "science") {
-    // Futuro: seleccionar planeta, mostrar datos, etc.
-    return;
-  }
+  if (currentSubject === "science") return;
 
   mouse.x = (ix / overlay.width) * 2 - 1;
   mouse.y = -(iy / overlay.height) * 2 + 1;
@@ -684,7 +721,6 @@ function handleSceneClick(ix, iy) {
     return;
   }
 
-  // En modo figura o cualquier otro: seleccionar objeto
   objSeleccionado = hitObject || null;
 }
 
@@ -694,34 +730,27 @@ function onResults(results) {
   overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 
   if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+    prevZoomDist = null;
     return;
   }
 
   const landmarks = results.multiHandLandmarks[0];
   const indexTip = landmarks[8];
+  const thumbTip = landmarks[4];
 
   const ix = indexTip.x * overlay.width;
   const iy = indexTip.y * overlay.height;
 
-  // botón fijo: margen desde el lado izquierdo
+  // botón fijo
   const margin = 40;
   buttonCenter.x = margin;
   buttonCenter.y = margin;
 
   const touchingButton = isIndexOnButton(ix, iy);
+  const thumbExtended = isThumbExtended(landmarks);
+  const thumbIndexDist = detectPinchDistance(landmarks);
 
-  // Detección de pinch -> "clic" corto
-  if (detectPinch(landmarks) && !clickActive) {
-    clickActive = true;
-    clickProcessed = false;
-
-    setTimeout(() => {
-      clickActive = false;
-      clickProcessed = false;
-    }, 200);
-  }
-
-  // Dibujar botón verde fijo
+  // Dibujo botón
   overlayCtx.beginPath();
   overlayCtx.arc(buttonCenter.x, buttonCenter.y, activationRadius, 0, 2 * Math.PI);
   overlayCtx.fillStyle = touchingButton
@@ -737,22 +766,37 @@ function onResults(results) {
   overlayCtx.fillStyle = touchingButton ? "#facc15" : "#22c55e";
   overlayCtx.fill();
 
-  // Punto del índice
+  // punto índice
   overlayCtx.beginPath();
   overlayCtx.arc(ix, iy, 10, 0, 2 * Math.PI);
   overlayCtx.fillStyle = touchingButton ? "#fbbf24" : "#38bdf8";
   overlayCtx.fill();
 
-  // Rotación con la mano (normalizada)
+  // Rotación (siempre activa con el índice)
   const normX = indexTip.x - 0.5;
   const normY = indexTip.y - 0.5;
-
   targetRotY = normX * Math.PI;
   targetRotX = normY * Math.PI;
 
-  // Clic gestual:
-  // 1) Si toca el botón verde y estamos en Matemáticas → cambiar de figura
-  if (!shapeChangeCooldown && clickActive && touchingButton && currentSubject === "math") {
+  // Si el pulgar no está extendido, no hay clic ni zoom
+  if (!thumbExtended) {
+    prevZoomDist = null;
+    return;
+  }
+
+  // 1) Pinch corto = clic (cuando están MUY cerca)
+  const clickThreshold = 0.035;
+  if (thumbIndexDist < clickThreshold && !clickActive) {
+    clickActive = true;
+    clickProcessed = false;
+
+    setTimeout(() => {
+      clickActive = false;
+      clickProcessed = false;
+    }, 200);
+  }
+
+  if (!shapeChangeCooldown && clickActive && touchingButton && currentSubject === "math" && !clickProcessed) {
     shapeChangeCooldown = true;
     cycleShape();
     setTimeout(() => {
@@ -761,10 +805,28 @@ function onResults(results) {
     clickProcessed = true;
   }
 
-  // 2) Si no está sobre el botón verde → interactuar con la escena
   if (clickActive && !clickProcessed && !touchingButton) {
     handleSceneClick(ix, iy);
     clickProcessed = true;
+  }
+
+  // 2) Zoom con los dedos separados (sin tocar botón verde)
+  const zoomMin = 0.06;
+  const zoomMax = 0.35;
+
+  if (!touchingButton && thumbIndexDist > zoomMin && thumbIndexDist < zoomMax) {
+    if (prevZoomDist !== null) {
+      const delta = thumbIndexDist - prevZoomDist;
+      if (Math.abs(delta) > 0.002) {
+        cameraZoom -= delta * 40; // factor de sensibilidad
+        if (cameraZoom < minZoom) cameraZoom = minZoom;
+        if (cameraZoom > maxZoom) cameraZoom = maxZoom;
+        camera3D.position.z = cameraZoom;
+      }
+    }
+    prevZoomDist = thumbIndexDist;
+  } else {
+    prevZoomDist = null;
   }
 }
 
@@ -783,7 +845,7 @@ hands.setOptions({
 hands.onResults(onResults);
 
 // =========================
-// 11. Cámara
+// 12. Cámara
 // =========================
 async function startCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -807,6 +869,6 @@ startCamera().catch((err) => {
   alert("No se pudo acceder a la cámara. Revisa permisos del navegador.");
 });
 
-// Al inicio: mostrar matemáticas
+// Estado inicial
 updateSubjectVisibility();
 if (modeBadgeEl) modeBadgeEl.textContent = "Math Mode";
