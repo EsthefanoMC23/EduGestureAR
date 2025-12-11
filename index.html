@@ -22,7 +22,7 @@
     </div>
     <div class="top-info">
       <span>👋 Mueve tu mano para rotar la figura</span>
-      <span>🤏 Junta pulgar + índice para cambiar de figura</span>
+      <span>🤏 Junta pulgar + índice para cambiar: Cubo → Esfera → Cilindro</span>
     </div>
   </div>
 
@@ -50,10 +50,47 @@
           <span class="hud-label">Figura actual:</span>
           <span id="shape-name" class="hud-value">Cubo</span>
         </div>
+
         <div class="hud-row">
           <span class="hud-label">Rotación X / Y:</span>
           <span id="rotation-info" class="hud-value">0° / 0°</span>
         </div>
+
+        <div class="hud-row">
+          <span class="hud-label">Volumen aproximado:</span>
+          <span id="volume-value" class="hud-value">0 u³</span>
+        </div>
+
+        <!-- Controles de dimensiones -->
+        <div class="hud-section hud-controls">
+          <div id="control-lado" class="hud-control">
+            <label class="control-label">Lado del cubo</label>
+            <div class="control-inputs">
+              <input id="lado-range" type="range" min="0.5" max="3" step="0.1" value="1.5" />
+              <input id="lado-number" type="number" min="0.5" max="3" step="0.1" value="1.5" />
+              <span class="control-unit">u</span>
+            </div>
+          </div>
+
+          <div id="control-radio" class="hud-control">
+            <label class="control-label">Radio</label>
+            <div class="control-inputs">
+              <input id="radio-range" type="range" min="0.5" max="3" step="0.1" value="1" />
+              <input id="radio-number" type="number" min="0.5" max="3" step="0.1" value="1" />
+              <span class="control-unit">u</span>
+            </div>
+          </div>
+
+          <div id="control-altura" class="hud-control">
+            <label class="control-label">Altura del cilindro</label>
+            <div class="control-inputs">
+              <input id="altura-range" type="range" min="0.5" max="3" step="0.1" value="1.5" />
+              <input id="altura-number" type="number" min="0.5" max="3" step="0.1" value="1.5" />
+              <span class="control-unit">u</span>
+            </div>
+          </div>
+        </div>
+
         <div class="hud-section">
           <div class="hud-label">Fórmula de volumen:</div>
           <div id="formula-text" class="hud-formula">
@@ -64,9 +101,10 @@
             <li><strong>lado</strong>: longitud de cada arista del cubo</li>
           </ul>
         </div>
+
         <div class="hud-tip">
-          💡 Consejo: prueba mover tu mano a la izquierda/derecha y arriba/abajo
-          para ver cómo cambia la orientación de la figura. Usa 🤏 para cambiar de figura.
+          💡 Consejo: mueve tu mano a la izquierda/derecha y arriba/abajo para rotar la figura.
+          Usa el gesto 🤏 para cambiar de figura y ajusta los sliders para explorar cómo cambia el volumen.
         </div>
       </div>
     </div>
