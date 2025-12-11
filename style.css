@@ -1,3 +1,6 @@
+/* ============================================
+   ESTILOS BASE Y GLOBALES
+============================================ */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -14,7 +17,9 @@ body {
   padding: 12px;
 }
 
-/* Barra superior */
+/* ============================================
+   BARRA SUPERIOR
+============================================ */
 .top-bar {
   display: flex;
   justify-content: space-between;
@@ -58,8 +63,9 @@ body {
   color: #cbd5f5;
 }
 
-/* Layout principal */
-
+/* ============================================
+   LAYOUT GENERAL
+============================================ */
 .app-container {
   width: 100%;
   height: calc(100vh - 70px);
@@ -67,122 +73,110 @@ body {
   gap: 12px;
 }
 
-/* ============================
+/* ============================================
    MENÚ LATERAL HOLOGRÁFICO
-   ============================ */
-
+============================================ */
 .side-menu {
-  width: 210px;
-  padding: 12px;
+  width: 230px;
+  padding: 14px;
   border-radius: 16px;
-  background: radial-gradient(circle at top left, rgba(15,23,42,0.95), rgba(15,23,42,0.98));
-  border: 1px solid rgba(148,163,184,0.6);
-  box-shadow: 0 0 25px rgba(59,130,246,0.4);
-  backdrop-filter: blur(12px);
+  background: linear-gradient(
+    160deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.9)
+  );
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.2);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .menu-title {
-  font-size: 0.9rem;
   font-weight: 600;
+  font-size: 1rem;
+  color: #93c5fd;
   text-transform: uppercase;
-  color: #e5e7eb;
-  margin-bottom: 2px;
-  letter-spacing: 0.08em;
-}
-
-/* Pestañas de áreas (Matemáticas / Ciencias / Otros) */
-
-.subject-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  letter-spacing: 0.05em;
   margin-bottom: 6px;
 }
 
+/* Pestañas de asignaturas */
+.subject-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .subject-tab {
-  flex: 1 1 auto;
-  padding: 4px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(148,163,184,0.6);
-  background: rgba(15,23,42,0.95);
-  color: #cbd5f5;
-  font-size: 0.75rem;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(30, 58, 138, 0.35);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #bfdbfe;
   cursor: pointer;
-  text-align: center;
-  transition:
-    background 0.2s ease-out,
-    border-color 0.2s ease-out,
-    box-shadow 0.2s ease-out,
-    transform 0.2s ease-out;
+  transition: 0.2s ease;
+}
+
+.subject-tab:hover:not(.active) {
+  background: rgba(59, 130, 246, 0.2);
 }
 
 .subject-tab.active {
-  background: rgba(59,130,246,0.45);
-  border-color: rgba(59,130,246,0.9);
-  color: #e5e7eb;
-  box-shadow: 0 0 14px rgba(59,130,246,0.7);
-  transform: translateY(-1px);
+  background: rgba(37, 99, 235, 0.45);
+  border-color: rgba(37, 99, 235, 0.8);
+  color: #fff;
 }
 
 .subject-tab:disabled {
-  opacity: 0.45;
-  cursor: default;
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
-/* Items del menú */
-
+/* Ítems del menú */
 .menu-item {
-  padding: 8px 10px;
-  font-size: 0.82rem;
-  border-radius: 999px;
-  background: radial-gradient(circle at left, rgba(59,130,246,0.22), rgba(15,23,42,0.95));
-  border: 1px solid rgba(59,130,246,0.55);
-  color: #e5e7eb;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid rgba(100, 116, 139, 0.4);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition:
-    background 0.2s ease-out,
-    transform 0.2s ease-out,
-    box-shadow 0.3s ease-out;
-  box-shadow: 0 0 12px rgba(37, 99, 235, 0.3);
+  color: #c7d2fe;
+  transition: 0.2s;
 }
 
 .menu-item:hover {
-  background: radial-gradient(circle at left, rgba(96,165,250,0.35), rgba(15,23,42,0.98));
-  transform: translateX(4px);
-  box-shadow: 0 0 18px rgba(59,130,246,0.6);
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.8);
 }
 
 .menu-item.active {
-  background: radial-gradient(circle at left, rgba(22,163,74,0.45), rgba(15,23,42,0.98));
-  border-color: rgba(34,197,94,0.9);
-  box-shadow: 0 0 20px rgba(34,197,94,0.7);
+  background: rgba(37, 99, 235, 0.5);
+  border-color: rgba(37, 99, 235, 0.9);
+  color: #fff;
 }
 
 .menu-separator {
-  border-bottom: 1px dashed rgba(148,163,184,0.5);
+  height: 1px;
+  background: rgba(148, 163, 184, 0.2);
   margin: 6px 0;
 }
 
-/* PANEL DE ESCENA */
-
+/* ============================================
+   PANEL DE ESCENA 3D
+============================================ */
 .scene-panel {
   position: relative;
   flex: 1;
   border-radius: 18px;
   overflow: hidden;
-  background: radial-gradient(circle at top left, rgba(15,23,42,0.95), rgba(15,23,42,0.98));
-  border: 1px solid rgba(148,163,184,0.5);
+  background: radial-gradient(
+    circle at top left,
+    rgba(15, 23, 42, 0.95),
+    rgba(15, 23, 42, 0.98)
+  );
+  border: 1px solid rgba(148, 163, 184, 0.5);
   box-shadow: 0 0 40px rgba(37, 99, 235, 0.4);
 }
 
-/* Header dentro del panel */
-
+/* Encabezado interno */
 .panel-header {
   position: absolute;
   top: 8px;
@@ -194,8 +188,12 @@ body {
   align-items: center;
   padding: 6px 10px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(15,23,42,0.95), rgba(30,64,175,0.75));
-  border: 1px solid rgba(148,163,184,0.6);
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.95),
+    rgba(30, 64, 175, 0.75)
+  );
+  border: 1px solid rgba(148, 163, 184, 0.6);
   font-size: 0.8rem;
 }
 
@@ -207,19 +205,18 @@ body {
 .panel-badge {
   padding: 2px 10px;
   border-radius: 999px;
-  background: rgba(34,197,94,0.18);
-  border: 1px solid rgba(34,197,94,0.5);
+  background: rgba(34, 197, 94, 0.18);
+  border: 1px solid rgba(34, 197, 94, 0.5);
   color: #bbf7d0;
 }
 
 .panel-badge-blue {
-  background: rgba(59,130,246,0.18);
-  border-color: rgba(59,130,246,0.8);
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.8);
   color: #bfdbfe;
 }
 
 /* Canvas 3D */
-
 #scene3d {
   position: absolute;
   inset: 0;
@@ -227,8 +224,9 @@ body {
   height: 100%;
 }
 
-/* Cámara pequeña flotante */
-
+/* ============================================
+   CÁMARA MINI FLOTANTE
+============================================ */
 .video-mini {
   position: absolute;
   bottom: 12px;
@@ -238,8 +236,8 @@ body {
   border-radius: 12px;
   overflow: hidden;
   z-index: 20;
-  border: 2px solid rgba(255,255,255,0.18);
-  background: rgba(0,0,0,0.35);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(4px);
 }
 
@@ -252,15 +250,13 @@ body {
 
 #overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   pointer-events: none;
 }
 
-/* HUD educativo desplegable */
-
+/* ============================================
+   HUD DESPLEGABLE
+============================================ */
 .hud {
   position: absolute;
   bottom: 10px;
@@ -269,8 +265,8 @@ body {
   z-index: 30;
   padding: 10px 12px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(8,47,73,0.96));
-  border: 1px solid rgba(148,163,184,0.7);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(8, 47, 73, 0.96));
+  border: 1px solid rgba(148, 163, 184, 0.7);
   backdrop-filter: blur(10px);
   font-size: 0.8rem;
   display: flex;
@@ -289,7 +285,6 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 8px;
 }
 
 .hud-left {
@@ -313,8 +308,6 @@ body {
   color: #e5e7eb;
 }
 
-/* Botón de despliegue */
-
 .hud-toggle-btn {
   border: none;
   border-radius: 999px;
@@ -323,15 +316,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(59,130,246,0.35);
-  border: 1px solid rgba(59,130,246,0.8);
+  background: rgba(59, 130, 246, 0.35);
+  border: 1px solid rgba(59, 130, 246, 0.8);
   color: #e5e7eb;
   cursor: pointer;
   font-size: 16px;
 }
 
-/* Controles de dimensiones */
-
+/* Controles del HUD */
 .hud-section {
   margin-top: 4px;
 }
@@ -369,8 +361,8 @@ body {
   width: 100%;
   padding: 2px 4px;
   border-radius: 6px;
-  border: 1px solid rgba(148,163,184,0.7);
-  background: rgba(15,23,42,0.9);
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.9);
   color: #e5e7eb;
   font-size: 0.75rem;
 }
@@ -380,11 +372,9 @@ body {
   color: #9ca3af;
 }
 
-/* Fórmulas y texto */
-
 .hud-formula {
   margin-top: 2px;
-  font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
   font-size: 0.78rem;
   color: #e0f2fe;
 }
@@ -405,40 +395,23 @@ body {
   color: #93c5fd;
 }
 
-/* Responsivo */
-
+/* ============================================
+   RESPONSIVO
+============================================ */
 @media (max-width: 900px) {
-  .top-bar {
-    flex-direction: column;
-    gap: 4px;
-    align-items: flex-start;
-  }
-
-  .top-info {
-    flex-direction: column;
-    gap: 2px;
-  }
 
   .app-container {
     flex-direction: column;
-    height: auto;
-    min-height: 70vh;
   }
 
   .side-menu {
     width: 100%;
-    order: 2;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .menu-item {
-    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
   }
 
   .scene-panel {
     height: 70vh;
-    order: 1;
   }
 
   .video-mini {
