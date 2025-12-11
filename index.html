@@ -9,9 +9,6 @@
 
   <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <!-- Extras de Three.js para texto 3D (etiquetas X/Y/Z) -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/FontLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/geometries/TextGeometry.js"></script>
 
   <!-- MediaPipe Hands -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
@@ -32,7 +29,19 @@
   <div class="app-container">
     <!-- Menú lateral holográfico -->
     <div class="side-menu">
-      <div class="menu-title">HoloTools</div>
+      <div class="menu-title">HOLOTOOLS</div>
+
+      <!-- Pestañas de áreas (por ahora solo Matemáticas activa) -->
+      <div class="subject-tabs">
+        <button class="subject-tab active" data-subject="math">Matemáticas</button>
+        <button class="subject-tab" data-subject="science" disabled>Ciencias</button>
+        <button class="subject-tab" data-subject="other" disabled>Otros</button>
+      </div>
+
+      <!-- Herramientas de Matemáticas -->
+      <div class="menu-item active" data-tool="figura">⬢ Figura 3D</div>
+
+      <div class="menu-separator"></div>
 
       <div class="menu-item" data-tool="crear-punto">⦿ Crear Punto</div>
       <div class="menu-item" data-tool="crear-vector">➤ Crear Vector</div>
@@ -125,7 +134,8 @@
         </div>
 
         <div class="hud-tip">
-          💡 Consejo: rota la figura moviendo tu mano frente a la cámara. Usa el gesto 🤏 sobre el botón verde fijo (arriba a la izquierda de la cámara) para cambiar de figura. Ahora también puedes usar el menú lateral para crear puntos, vectores y otros objetos 3D.
+          💡 Consejo: rota la figura moviendo tu mano frente a la cámara. Usa el gesto 🤏 sobre el botón verde fijo (arriba a la izquierda de la cámara) para cambiar de figura.  
+          También puedes usar el menú de <strong>Matemáticas</strong> para trabajar con puntos, vectores y futuros planos 3D.
         </div>
       </div>
     </div>
