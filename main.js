@@ -21,12 +21,19 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 let mesh;
 let currentShape = "cubo";
 
+// Dimensiones (en unidades arbitrarias)
+const dims = {
+  lado: 1.5,
+  radio: 1,
+  altura: 1.5
+};
+
 function createGeometryFor(shape) {
   switch (shape) {
     case "esfera":
       return new THREE.SphereGeometry(0.8, 32, 32);
     case "cilindro":
-      return new THREE.CylinderGeometry(0.6, 0.6, 1.4, 32);
+      return new THREE.CylinderGeometry(0.6, 0.6, 1, 32);
     case "cubo":
     default:
       return new THREE.BoxGeometry(1, 1, 1);
@@ -58,12 +65,68 @@ const shapeNameEl = document.getElementById("shape-name");
 const rotationInfoEl = document.getElementById("rotation-info");
 const formulaTextEl = document.getElementById("formula-text");
 const formulaExplainEl = document.getElementById("formula-explain");
+const volumeValueEl = document.getElementById("volume-value");
+
+// Controles de dimensiones
+const controlLadoDiv = document.getElementById("control-lado");
+const controlRadioDiv = document.getElementById("control-radio");
+const controlAlturaDiv = document.getElementById("control-altura");
+
+const ladoRange = document.getElementById("lado-range");
+const ladoNumber = document.getElementById("lado-number");
+const radioRange = document.getElementById("radio-range");
+const radioNumber = document.getElementById("radio-number");
+const alturaRange = document.getElementById("altura-range");
+const alturaNumber = document.getElementById("altura-number");
+
+// Aplicar escala al mesh según dimensiones
+function applyScaleFromDimensions() {
+  if (!mesh) return;
+
+  if (currentShape === "cubo") {
+    const s = dims.lado;
+    mesh.scale.set(s, s, s);
+  } else if (currentShape === "esfera") {
+    const s = dims.radio;
+    mesh.scale.set(s, s, s);
+  } else if (currentShape === "cilindro") {
+    const r = dims.radio;
+    const h = dims.altura;
+    // Escalamos el cilindro: radio en X/Z, altura en Y
+    mesh.scale.set(r, h, r);
+  }
+}
+
+// Calcular volumen según la figura actual
+function updateVolume() {
+  let V = 0;
+  if (currentShape === "cubo") {
+    const lado = dims.lado;
+    V = lado * lado * lado;
+  } else if (currentShape === "esfera") {
+    const radio = dims.radio;
+    V = (4 / 3) * Math.PI * Math.pow(radio, 3);
+  } else if (currentShape === "cilindro") {
+    const radio = dims.radio;
+    const altura = dims.altura;
+    V = Math.PI * radio * radio * altura;
+  }
+
+  if (volumeValueEl) {
+    volumeValueEl.textContent = `${V.toFixed(2)} u³`;
+  }
+}
 
 // Actualizar HUD según figura actual
 function updateHUDForShape() {
   if (!shapeNameEl || !formulaTextEl || !formulaExplainEl) return;
 
   formulaExplainEl.innerHTML = "";
+
+  // Mostrar / ocultar controles relevantes
+  if (controlLadoDiv) controlLadoDiv.style.display = currentShape === "cubo" ? "flex" : "none";
+  if (controlRadioDiv) controlRadioDiv.style.display = currentShape === "esfera" || currentShape === "cilindro" ? "flex" : "none";
+  if (controlAlturaDiv) controlAlturaDiv.style.display = currentShape === "cilindro" ? "flex" : "none";
 
   if (currentShape === "cubo") {
     shapeNameEl.textContent = "Cubo";
@@ -94,6 +157,9 @@ function updateHUDForShape() {
       <li><strong>altura</strong>: distancia entre las dos bases</li>
     `;
   }
+
+  applyScaleFromDimensions();
+  updateVolume();
 }
 
 updateHUDForShape();
@@ -127,7 +193,53 @@ function animate() {
 animate();
 
 // =========================
-// 2. Setup MediaPipe Hands
+// 2. Listeners de controles
+// =========================
+
+function syncRangeAndNumber(rangeEl, numberEl, onChange) {
+  if (!rangeEl || !numberEl) return;
+
+  rangeEl.addEventListener("input", (e) => {
+    const value = parseFloat(e.target.value);
+    numberEl.value = value;
+    onChange(value);
+  });
+
+  numberEl.addEventListener("input", (e) => {
+    let value = parseFloat(e.target.value);
+    if (isNaN(value)) return;
+
+    const min = parseFloat(numberEl.min) || 0.5;
+    const max = parseFloat(numberEl.max) || 3;
+    if (value < min) value = min;
+    if (value > max) value = max;
+
+    numberEl.value = value;
+    rangeEl.value = value;
+    onChange(value);
+  });
+}
+
+syncRangeAndNumber(ladoRange, ladoNumber, (val) => {
+  dims.lado = val;
+  applyScaleFromDimensions();
+  updateVolume();
+});
+
+syncRangeAndNumber(radioRange, radioNumber, (val) => {
+  dims.radio = val;
+  applyScaleFromDimensions();
+  updateVolume();
+});
+
+syncRangeAndNumber(alturaRange, alturaNumber, (val) => {
+  dims.altura = val;
+  applyScaleFromDimensions();
+  updateVolume();
+});
+
+// =========================
+// 3. Setup MediaPipe Hands
 // =========================
 const videoElement = document.getElementById("input-video");
 const overlay = document.getElementById("overlay");
@@ -173,6 +285,7 @@ function cycleShape() {
   scene.add(mesh);
   targetRotX = mesh.rotation.x;
   targetRotY = mesh.rotation.y;
+
   updateHUDForShape();
 }
 
@@ -231,7 +344,7 @@ hands.setOptions({
 hands.onResults(onResults);
 
 // =========================
-// 3. Activar cámara con CameraUtils
+// 4. Activar cámara con CameraUtils
 // =========================
 async function startCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
