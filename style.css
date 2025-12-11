@@ -61,24 +61,27 @@ body {
 /* Layout principal */
 
 .app-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
   width: 100%;
   height: calc(100vh - 70px);
+  display: flex;
 }
 
-.video-panel,
 .scene-panel {
   position: relative;
+  flex: 1;
   border-radius: 18px;
   overflow: hidden;
-  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98));
+  background: radial-gradient(
+    circle at top left,
+    rgba(15, 23, 42, 0.95),
+    rgba(15, 23, 42, 0.98)
+  );
   border: 1px solid rgba(148, 163, 184, 0.5);
   box-shadow: 0 0 40px rgba(37, 99, 235, 0.4);
 }
 
-/* Header dentro de cada panel */
+/* Header dentro del panel */
+
 .panel-header {
   position: absolute;
   top: 8px;
@@ -90,7 +93,11 @@ body {
   align-items: center;
   padding: 6px 10px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 64, 175, 0.75));
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.95),
+    rgba(30, 64, 175, 0.75)
+  );
   border: 1px solid rgba(148, 163, 184, 0.6);
   font-size: 0.8rem;
 }
@@ -114,10 +121,8 @@ body {
   color: #bfdbfe;
 }
 
-/* Video & overlays */
+/* Canvas 3D */
 
-#input-video,
-#overlay,
 #scene3d {
   position: absolute;
   inset: 0;
@@ -125,31 +130,79 @@ body {
   height: 100%;
 }
 
+/* Cámara pequeña flotante */
+
+.video-mini {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  width: 150px;
+  height: 112px;
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 20;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+}
+
 #input-video {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  opacity: 0.75;
 }
 
 #overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
-/* HUD educativo */
+/* HUD educativo desplegable */
 
 .hud {
   position: absolute;
   bottom: 10px;
   left: 10px;
   right: 10px;
-  z-index: 20;
+  z-index: 30;
   padding: 10px 12px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(8, 47, 73, 0.96));
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.96),
+    rgba(8, 47, 73, 0.96)
+  );
   border: 1px solid rgba(148, 163, 184, 0.7);
   backdrop-filter: blur(10px);
   font-size: 0.8rem;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  transform-origin: bottom;
+  transform: translateY(0);
+  transition: transform 0.3s ease-in-out;
+}
+
+.hud-collapsed {
+  transform: translateY(calc(100% - 32px));
+}
+
+.hud-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.hud-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .hud-row {
@@ -167,13 +220,28 @@ body {
   color: #e5e7eb;
 }
 
-/* Secciones de HUD */
+/* Botón de despliegue */
+
+.hud-toggle-btn {
+  border: none;
+  border-radius: 999px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.35);
+  border: 1px solid rgba(59, 130, 246, 0.8);
+  color: #e5e7eb;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Controles de dimensiones */
 
 .hud-section {
   margin-top: 4px;
 }
-
-/* Controles de dimensiones */
 
 .hud-controls {
   display: flex;
@@ -219,11 +287,12 @@ body {
   color: #9ca3af;
 }
 
-/* Fórmulas */
+/* Fórmulas y texto */
 
 .hud-formula {
   margin-top: 2px;
-  font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
   font-size: 0.78rem;
   color: #e0f2fe;
 }
@@ -247,16 +316,6 @@ body {
 /* Responsivo */
 
 @media (max-width: 900px) {
-  .app-container {
-    grid-template-columns: 1fr;
-    height: auto;
-  }
-
-  .video-panel,
-  .scene-panel {
-    height: 45vh;
-  }
-
   .top-bar {
     flex-direction: column;
     gap: 4px;
@@ -266,5 +325,19 @@ body {
   .top-info {
     flex-direction: column;
     gap: 2px;
+  }
+
+  .app-container {
+    height: auto;
+    min-height: 70vh;
+  }
+
+  .scene-panel {
+    height: 70vh;
+  }
+
+  .video-mini {
+    width: 130px;
+    height: 96px;
   }
 }
