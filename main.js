@@ -125,7 +125,8 @@ function updateHUDForShape() {
 
   // Mostrar / ocultar controles relevantes
   if (controlLadoDiv) controlLadoDiv.style.display = currentShape === "cubo" ? "flex" : "none";
-  if (controlRadioDiv) controlRadioDiv.style.display = currentShape === "esfera" || currentShape === "cilindro" ? "flex" : "none";
+  if (controlRadioDiv) controlRadioDiv.style.display =
+    currentShape === "esfera" || currentShape === "cilindro" ? "flex" : "none";
   if (controlAlturaDiv) controlAlturaDiv.style.display = currentShape === "cilindro" ? "flex" : "none";
 
   if (currentShape === "cubo") {
@@ -245,6 +246,10 @@ const videoElement = document.getElementById("input-video");
 const overlay = document.getElementById("overlay");
 const overlayCtx = overlay.getContext("2d");
 
+// Punto fijo de activación en pantalla (botón verde)
+const activationRadius = 35; // en píxeles
+const buttonCenter = { x: 0, y: 0 }; // se calcula cada frame según el tamaño del canvas
+
 // Ajustar tamaño del overlay
 function resizeOverlay() {
   overlay.width = videoElement.clientWidth;
@@ -252,25 +257,14 @@ function resizeOverlay() {
 }
 window.addEventListener("resize", resizeOverlay);
 
-// Pinch detection (pulgar + índice)
-let pinchCooldown = false;
+// Cooldown para no cambiar de figura muchas veces seguidas
+let shapeChangeCooldown = false;
 
-function detectPinch(landmarks) {
-  // Pulgar: tip = 4
-  // Índice: tip = 8
-  const thumbTip = landmarks[4];
-  const indexTip = landmarks[8];
-
-  // Distancia en espacio normalizado [0,1]
-  const dx = thumbTip.x - indexTip.x;
-  const dy = thumbTip.y - indexTip.y;
+function isIndexOnButton(ix, iy) {
+  const dx = ix - buttonCenter.x;
+  const dy = iy - buttonCenter.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
-
-  // Umbral simple: si están muy cerca -> pinch
-  return {
-    isPinch: dist < 0.04,
-    dist
-  };
+  return dist < activationRadius;
 }
 
 function cycleShape() {
@@ -303,39 +297,41 @@ function onResults(results) {
 
   const landmarks = results.multiHandLandmarks[0];
 
-  // Puntos de interés:
-  //  - Pulgar (tip = 4)
-  //  - Índice (tip = 8)
-  const thumbTip = landmarks[4];
+  // Punto de interés: punta del dedo índice (tip = 8)
   const indexTip = landmarks[8];
 
-  // Pasar a coordenadas de pantalla
+  // Coordenadas del índice en la pantalla
   const ix = indexTip.x * overlay.width;
   const iy = indexTip.y * overlay.height;
-  const tx = thumbTip.x * overlay.width;
-  const ty = thumbTip.y * overlay.height;
 
-  // Detectar pinch una sola vez por frame
-  const { isPinch } = detectPinch(landmarks);
+  // Definir el botón fijo en una esquina (por ejemplo, esquina superior derecha)
+  const margin = 40;
+  buttonCenter.x = overlay.width - margin;
+  buttonCenter.y = margin;
 
-  // Dibujar línea entre pulgar e índice
+  const touchingButton = isIndexOnButton(ix, iy);
+
+  // Dibujar botón fijo (círculo verde en la esquina)
   overlayCtx.beginPath();
-  overlayCtx.moveTo(tx, ty);
-  overlayCtx.lineTo(ix, iy);
-  overlayCtx.lineWidth = 4;
-  overlayCtx.strokeStyle = isPinch ? "#facc15" : "rgba(148, 163, 184, 0.7)";
+  overlayCtx.arc(buttonCenter.x, buttonCenter.y, activationRadius, 0, 2 * Math.PI);
+  overlayCtx.fillStyle = touchingButton
+    ? "rgba(250, 204, 21, 0.25)" // amarillo suave cuando lo toca
+    : "rgba(22, 163, 74, 0.18)";  // verde suave normal
+  overlayCtx.strokeStyle = touchingButton ? "#facc15" : "#22c55e";
+  overlayCtx.lineWidth = 3;
+  overlayCtx.fill();
   overlayCtx.stroke();
+
+  // Círculo central del botón
+  overlayCtx.beginPath();
+  overlayCtx.arc(buttonCenter.x, buttonCenter.y, 8, 0, 2 * Math.PI);
+  overlayCtx.fillStyle = touchingButton ? "#facc15" : "#22c55e";
+  overlayCtx.fill();
 
   // Dibujar punto del índice
   overlayCtx.beginPath();
   overlayCtx.arc(ix, iy, 10, 0, 2 * Math.PI);
-  overlayCtx.fillStyle = isPinch ? "#facc15" : "#38bdf8";
-  overlayCtx.fill();
-
-  // Dibujar punto del pulgar
-  overlayCtx.beginPath();
-  overlayCtx.arc(tx, ty, 9, 0, 2 * Math.PI);
-  overlayCtx.fillStyle = isPinch ? "#facc15" : "#22c55e";
+  overlayCtx.fillStyle = touchingButton ? "#facc15" : "#38bdf8";
   overlayCtx.fill();
 
   // Mapear la posición del índice a rotación
@@ -345,12 +341,12 @@ function onResults(results) {
   targetRotY = normX * Math.PI; // rotación horizontal
   targetRotX = normY * Math.PI; // rotación vertical
 
-  // Detección de pinch para cambiar de figura
-  if (!pinchCooldown && isPinch) {
-    pinchCooldown = true;
+  // "Tocar" el botón con el dedo para cambiar de figura
+  if (!shapeChangeCooldown && touchingButton) {
+    shapeChangeCooldown = true;
     cycleShape();
     setTimeout(() => {
-      pinchCooldown = false;
+      shapeChangeCooldown = false;
     }, 700); // pequeña pausa para no cambiar muchas veces
   }
 }
