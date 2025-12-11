@@ -89,9 +89,50 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   color: #e5e7eb;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   letter-spacing: 0.08em;
 }
+
+/* Pestañas de áreas (Matemáticas / Ciencias / Otros) */
+
+.subject-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.subject-tab {
+  flex: 1 1 auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.6);
+  background: rgba(15,23,42,0.95);
+  color: #cbd5f5;
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background 0.2s ease-out,
+    border-color 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    transform 0.2s ease-out;
+}
+
+.subject-tab.active {
+  background: rgba(59,130,246,0.45);
+  border-color: rgba(59,130,246,0.9);
+  color: #e5e7eb;
+  box-shadow: 0 0 14px rgba(59,130,246,0.7);
+  transform: translateY(-1px);
+}
+
+.subject-tab:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Items del menú */
 
 .menu-item {
   padding: 8px 10px;
@@ -387,13 +428,12 @@ body {
   .side-menu {
     width: 100%;
     order: 2;
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 8px;
   }
 
   .menu-item {
-    flex: 1 1 calc(50% - 10px);
+    width: 100%;
   }
 
   .scene-panel {
