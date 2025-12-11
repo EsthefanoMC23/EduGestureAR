@@ -37,8 +37,8 @@ scene.add(artsGroup);
 // Sujeto actual: "math" | "science" | "arts"
 let currentSubject = "math";
 
-// Overlay de carga
-const loadingOverlay = document.getElementById("loading-overlay");
+// Overlay de carga (AJUSTADO A loading-screen PARA COINCIDIR CON index/style)
+const loadingOverlay = document.getElementById("loading-screen");
 function hideLoading() {
   if (loadingOverlay && !loadingOverlay.classList.contains("hidden")) {
     loadingOverlay.classList.add("hidden");
@@ -693,7 +693,7 @@ function animate() {
     }
   }
 
-  // Artes: rotación suave del grupo según gestos (como si giraras el cuadro en 3D)
+  // Artes: rotación suave del grupo según gestos
   if (currentSubject === "arts" && artsCreated) {
     artsGroup.rotation.y += (targetRotY - artsGroup.rotation.y) * 0.08;
     artsGroup.rotation.x += (targetRotX - artsGroup.rotation.x) * 0.04;
@@ -864,7 +864,6 @@ function handleSceneClick(ix, iy) {
       const obj = intersects[0].object;
       const point = intersects[0].point;
 
-      // Solo pintamos si tocamos el lienzo
       if (obj === artCanvas || obj.userData.type === "art-canvas") {
         paintOnCanvas(point);
       }
@@ -926,7 +925,7 @@ function onResults(results) {
   const ix = indexTip.x * overlay.width;
   const iy = indexTip.y * overlay.height;
 
-  // botón fijo (arriba izquierda de la mini-cámara, pero relativo al overlay)
+  // botón fijo
   const margin = 40;
   buttonCenter.x = margin;
   buttonCenter.y = margin;
