@@ -17,6 +17,19 @@
 <body>
 
   <!-- =============================== -->
+  <!-- ⏳ OVERLAY DE CARGA -->
+  <!-- =============================== -->
+  <div id="loading-overlay">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <div class="loading-text">Cargando EduGesture AR...</div>
+      <div class="loading-subtext">
+        Preparando cámaras, escenas 3D y gestos 🖐️
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================== -->
   <!-- 🔷 BARRA SUPERIOR -->
   <!-- =============================== -->
   <div class="top-bar">
@@ -26,8 +39,8 @@
     </div>
 
     <div class="top-info">
-      <span>👋 Mueve tu mano para rotar la figura o la galaxia</span>
-      <span>🤏 Pulgar + índice = clic (cambiar figura / seleccionar puntos)</span>
+      <span>👋 Mueve tu mano para rotar la figura, la galaxia o el lienzo 3D</span>
+      <span>🤏 Pulgar + índice = clic (cambiar figura / pintar / seleccionar)</span>
     </div>
   </div>
 
@@ -38,6 +51,7 @@
   <div class="tab-bar">
     <button class="subject-tab active" data-subject="math">📐 Matemáticas</button>
     <button class="subject-tab" data-subject="science">🪐 Ciencias (Astronomía)</button>
+    <button class="subject-tab" data-subject="arts">🎨 Artes (Pintura 3D)</button>
   </div>
 
 
@@ -53,6 +67,7 @@
 
       <div class="holo-title">HOLOTOOLS</div>
 
+      <!-- Matemáticas (activos en modo Math) -->
       <button class="menu-item active" data-tool="figura">📦 Figura 3D</button>
       <button class="menu-item" data-tool="crear-punto">➕ Crear Punto</button>
       <button class="menu-item" data-tool="crear-vector">📍 Crear Vector</button>
@@ -62,6 +77,8 @@
 
       <button class="menu-item" data-tool="borrar">🗑️ Borrar selección</button>
       <button class="menu-item" data-tool="reset">🔄 Reset escena</button>
+
+      <!-- En Artes más adelante podemos reutilizar HOLOTOOLS para pinceles, colores, etc. -->
 
     </div>
 
@@ -164,7 +181,7 @@
         </div>
 
         <div class="hud-tip">
-          💡 Consejo: rota la figura moviendo tu mano. Usa el gesto 🤏 sobre el botón verde (arriba izquierda) para cambiar entre cubo, esfera y cilindro.
+          💡 Consejo: rota la figura moviendo tu mano. Usa el gesto 🤏 sobre el botón verde (arriba izquierda de la cámara) para cambiar entre cubo, esfera y cilindro.
         </div>
 
       </div>
