@@ -50,11 +50,46 @@ function createMesh(shape) {
   const geometry = createGeometryFor(shape);
   const newMesh = new THREE.Mesh(geometry, material);
   newMesh.rotation.set(0.4, -0.4, 0.1);
+  newMesh.userData.type = "figura";
   return newMesh;
 }
 
 mesh = createMesh(currentShape);
 scene.add(mesh);
+
+// =========================
+// Plano cartesiano 3D extra
+// =========================
+const axesHelper = new THREE.AxesHelper(3);
+scene.add(axesHelper);
+
+const gridHelper = new THREE.GridHelper(10, 20, 0x444444, 0x222222);
+gridHelper.rotation.x = Math.PI / 2;
+scene.add(gridHelper);
+
+// Etiquetas de ejes
+const fontLoader = new THREE.FontLoader();
+fontLoader.load(
+  "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json",
+  (font) => {
+    const textMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+    function addLabel(text, x, y, z) {
+      const geo = new THREE.TextGeometry(text, {
+        font,
+        size: 0.2,
+        height: 0.02
+      });
+      const labelMesh = new THREE.Mesh(geo, textMat);
+      labelMesh.position.set(x, y, z);
+      scene.add(labelMesh);
+    }
+
+    addLabel("X", 3.4, 0, 0);
+    addLabel("Y", 0, 3.4, 0);
+    addLabel("Z", 0, 0, 3.4);
+  }
+);
 
 // Variables de rotación controladas por la mano
 let targetRotX = mesh.rotation.x;
@@ -172,11 +207,91 @@ function onResize() {
 window.addEventListener("resize", onResize);
 onResize();
 
+// =========================
+// Extras interactivos 3D
+// =========================
+let objSeleccionado = null;
+let puntos = [];
+let vectores = [];
+let planos = [];
+let modoActual = null;
+let vectorPointsBuffer = [];
+let planePointsBuffer = [];
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+function crearPunto(x, y, z) {
+  const geo = new THREE.SphereGeometry(0.07, 16, 16);
+  const mat = new THREE.MeshStandardMaterial({ color: 0xffd500 });
+  const p = new THREE.Mesh(geo, mat);
+  p.position.set(x, y, z);
+  p.userData.type = "punto";
+  scene.add(p);
+  puntos.push(p);
+}
+
+function crearVector(a, b, color = 0x00aaff) {
+  const dir = new THREE.Vector3().subVectors(b, a);
+  const len = dir.length();
+  const arrow = new THREE.ArrowHelper(dir.clone().normalize(), a, len, color, 0.3, 0.15);
+  arrow.userData.type = "vector";
+  scene.add(arrow);
+  vectores.push(arrow);
+}
+
+function resetSceneExtras() {
+  puntos.forEach(p => scene.remove(p));
+  vectores.forEach(v => scene.remove(v));
+  planos.forEach(pl => scene.remove(pl));
+  puntos = [];
+  vectores = [];
+  planos = [];
+  vectorPointsBuffer = [];
+  planePointsBuffer = [];
+  objSeleccionado = null;
+}
+
+function deleteSelectedObject() {
+  if (!objSeleccionado) return;
+  if (objSeleccionado === mesh) return; // no borrar la figura principal
+
+  scene.remove(objSeleccionado);
+  puntos = puntos.filter(p => p !== objSeleccionado);
+  vectores = vectores.filter(v => v !== objSeleccionado);
+  planos = planos.filter(pl => pl !== objSeleccionado);
+  objSeleccionado = null;
+}
+
+// Menú lateral holográfico
+const menuItems = document.querySelectorAll(".menu-item");
+menuItems.forEach(item => {
+  item.addEventListener("click", () => {
+    menuItems.forEach(i => i.classList.remove("active"));
+    item.classList.add("active");
+    modoActual = item.dataset.tool;
+
+    if (modoActual === "reset") {
+      resetSceneExtras();
+    } else if (modoActual === "borrar") {
+      if (objSeleccionado) {
+        deleteSelectedObject();
+      }
+    }
+  });
+});
+
+// Rotación + render
 function animate() {
   requestAnimationFrame(animate);
 
-  mesh.rotation.x += (targetRotX - mesh.rotation.x) * 0.1;
-  mesh.rotation.y += (targetRotY - mesh.rotation.y) * 0.1;
+  if (objSeleccionado && objSeleccionado !== mesh) {
+    objSeleccionado.rotation.x += (targetRotX - objSeleccionado.rotation.x) * 0.1;
+    objSeleccionado.rotation.y += (targetRotY - objSeleccionado.rotation.y) * 0.1;
+  } else {
+    mesh.rotation.x += (targetRotX - mesh.rotation.x) * 0.1;
+    mesh.rotation.y += (targetRotY - mesh.rotation.y) * 0.1;
+  }
 
   const degX = (mesh.rotation.x * 180 / Math.PI).toFixed(0);
   const degY = (mesh.rotation.y * 180 / Math.PI).toFixed(0);
@@ -266,6 +381,7 @@ const buttonCenter = { x: 0, y: 0 };
 
 // estados de clic por pinch
 let clickActive = false;
+let clickProcessed = false;
 let shapeChangeCooldown = false;
 
 function isIndexOnButton(ix, iy) {
@@ -303,6 +419,53 @@ function cycleShape() {
   updateHUDForShape();
 }
 
+// Procesar clic en la escena (no botón verde)
+function handleSceneClick(ix, iy) {
+  mouse.x = (ix / overlay.width) * 2 - 1;
+  mouse.y = -(iy / overlay.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera3D);
+  const intersects = raycaster.intersectObjects(scene.children, true);
+
+  let hitObject = null;
+  let hitPoint = null;
+
+  if (intersects.length > 0) {
+    hitObject = intersects[0].object;
+    hitPoint = intersects[0].point;
+  }
+
+  if (modoActual === "crear-punto") {
+    if (hitPoint) {
+      crearPunto(hitPoint.x, hitPoint.y, hitPoint.z);
+    }
+    return;
+  }
+
+  if (modoActual === "crear-vector") {
+    if (hitPoint) {
+      vectorPointsBuffer.push(hitPoint.clone());
+      if (vectorPointsBuffer.length >= 2) {
+        const a = vectorPointsBuffer[vectorPointsBuffer.length - 2];
+        const b = vectorPointsBuffer[vectorPointsBuffer.length - 1];
+        crearVector(a, b);
+      }
+    }
+    return;
+  }
+
+  if (modoActual === "borrar") {
+    if (hitObject && hitObject !== mesh) {
+      objSeleccionado = hitObject;
+      deleteSelectedObject();
+    }
+    return;
+  }
+
+  // por defecto: seleccionar objeto para rotarlo
+  objSeleccionado = hitObject || null;
+}
+
 // Callback de MediaPipe
 function onResults(results) {
   resizeOverlay();
@@ -313,13 +476,12 @@ function onResults(results) {
   }
 
   const landmarks = results.multiHandLandmarks[0];
-
   const indexTip = landmarks[8];
 
   const ix = indexTip.x * overlay.width;
   const iy = indexTip.y * overlay.height;
 
-  // botón fijo: ahora margen desde el lado izquierdo
+  // botón fijo: margen desde el lado izquierdo
   const margin = 40;
   buttonCenter.x = margin;
   buttonCenter.y = margin;
@@ -329,8 +491,11 @@ function onResults(results) {
   // Detección de pinch -> "clic" corto
   if (detectPinch(landmarks) && !clickActive) {
     clickActive = true;
+    clickProcessed = false;
+
     setTimeout(() => {
       clickActive = false;
+      clickProcessed = false;
     }, 200);
   }
 
@@ -363,13 +528,21 @@ function onResults(results) {
   targetRotY = normX * Math.PI;
   targetRotX = normY * Math.PI;
 
-  // Clic gestual sobre el botón → cambio de figura
+  // Clic gestual:
+  // 1) Si toca el botón verde → cambiar de figura
   if (!shapeChangeCooldown && clickActive && touchingButton) {
     shapeChangeCooldown = true;
     cycleShape();
     setTimeout(() => {
       shapeChangeCooldown = false;
     }, 700);
+    clickProcessed = true;
+  }
+
+  // 2) Si no está sobre el botón verde → interactuar con la escena
+  if (clickActive && !clickProcessed && !touchingButton) {
+    handleSceneClick(ix, iy);
+    clickProcessed = true;
   }
 }
 
