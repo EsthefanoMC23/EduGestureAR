@@ -267,7 +267,10 @@ function detectPinch(landmarks) {
   const dist = Math.sqrt(dx * dx + dy * dy);
 
   // Umbral simple: si están muy cerca -> pinch
-  return dist < 0.04;
+  return {
+    isPinch: dist < 0.04,
+    dist
+  };
 }
 
 function cycleShape() {
@@ -300,19 +303,42 @@ function onResults(results) {
 
   const landmarks = results.multiHandLandmarks[0];
 
-  // Punto 8 = punta del dedo índice
+  // Puntos de interés:
+  //  - Pulgar (tip = 4)
+  //  - Índice (tip = 8)
+  const thumbTip = landmarks[4];
   const indexTip = landmarks[8];
 
-  // Dibujo simple del punto en pantalla (overlay)
-  const x = indexTip.x * overlay.width;
-  const y = indexTip.y * overlay.height;
+  // Pasar a coordenadas de pantalla
+  const ix = indexTip.x * overlay.width;
+  const iy = indexTip.y * overlay.height;
+  const tx = thumbTip.x * overlay.width;
+  const ty = thumbTip.y * overlay.height;
 
+  // Detectar pinch una sola vez por frame
+  const { isPinch } = detectPinch(landmarks);
+
+  // Dibujar línea entre pulgar e índice
   overlayCtx.beginPath();
-  overlayCtx.arc(x, y, 10, 0, 2 * Math.PI);
-  overlayCtx.fillStyle = "#38bdf8";
+  overlayCtx.moveTo(tx, ty);
+  overlayCtx.lineTo(ix, iy);
+  overlayCtx.lineWidth = 4;
+  overlayCtx.strokeStyle = isPinch ? "#facc15" : "rgba(148, 163, 184, 0.7)";
+  overlayCtx.stroke();
+
+  // Dibujar punto del índice
+  overlayCtx.beginPath();
+  overlayCtx.arc(ix, iy, 10, 0, 2 * Math.PI);
+  overlayCtx.fillStyle = isPinch ? "#facc15" : "#38bdf8";
   overlayCtx.fill();
 
-  // Mapear las coordenadas normalizadas [0,1] a ángulos de rotación
+  // Dibujar punto del pulgar
+  overlayCtx.beginPath();
+  overlayCtx.arc(tx, ty, 9, 0, 2 * Math.PI);
+  overlayCtx.fillStyle = isPinch ? "#facc15" : "#22c55e";
+  overlayCtx.fill();
+
+  // Mapear la posición del índice a rotación
   const normX = indexTip.x - 0.5; // -0.5 a 0.5
   const normY = indexTip.y - 0.5;
 
@@ -320,7 +346,7 @@ function onResults(results) {
   targetRotX = normY * Math.PI; // rotación vertical
 
   // Detección de pinch para cambiar de figura
-  if (!pinchCooldown && detectPinch(landmarks)) {
+  if (!pinchCooldown && isPinch) {
     pinchCooldown = true;
     cycleShape();
     setTimeout(() => {
