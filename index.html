@@ -18,11 +18,13 @@
   <div class="top-bar">
     <div class="brand">
       <span class="logo-dot"></span>
-      <span class="brand-title">EduGesture <span class="brand-sub">AR</span></span>
+      <span class="brand-title">
+        EduGesture <span class="brand-sub">AR</span>
+      </span>
     </div>
     <div class="top-info">
-      <span>👋 Mueve tu mano para rotar la figura</span>
-      <span>🤏 Pulgar + índice = clic sobre el botón verde para cambiar de figura</span>
+      <span>👋 Mueve tu mano para rotar la figura o la escena</span>
+      <span>🤏 Pulgar + índice = clic sobre el botón verde para cambiar de figura o interactuar</span>
     </div>
   </div>
 
@@ -31,14 +33,14 @@
     <div class="side-menu">
       <div class="menu-title">HOLOTOOLS</div>
 
-      <!-- Pestañas de áreas (por ahora solo Matemáticas activa) -->
+      <!-- Pestañas de áreas -->
       <div class="subject-tabs">
         <button class="subject-tab active" data-subject="math">Matemáticas</button>
-        <button class="subject-tab" data-subject="science" disabled>Ciencias</button>
+        <button class="subject-tab" data-subject="science">Ciencias</button>
         <button class="subject-tab" data-subject="other" disabled>Otros</button>
       </div>
 
-      <!-- Herramientas de Matemáticas -->
+      <!-- Herramientas de Matemáticas (por defecto activas) -->
       <div class="menu-item active" data-tool="figura">⬢ Figura 3D</div>
 
       <div class="menu-separator"></div>
@@ -57,6 +59,7 @@
     <div class="scene-panel">
       <div class="panel-header">
         <span class="panel-title">Escena 3D Educativa</span>
+        <!-- El texto "Math Mode" lo podemos cambiar dinámicamente en JS si quieres más adelante -->
         <span class="panel-badge panel-badge-blue">Math Mode</span>
       </div>
 
@@ -69,7 +72,7 @@
         <canvas id="overlay"></canvas>
       </div>
 
-      <!-- Panel HUD desplegable -->
+      <!-- Panel HUD desplegable (solo se usará en Matemáticas) -->
       <div id="hud" class="hud">
         <div class="hud-top-row">
           <div class="hud-left">
@@ -134,8 +137,11 @@
         </div>
 
         <div class="hud-tip">
-          💡 Consejo: rota la figura moviendo tu mano frente a la cámara. Usa el gesto 🤏 sobre el botón verde fijo (arriba a la izquierda de la cámara) para cambiar de figura.  
-          También puedes usar el menú de <strong>Matemáticas</strong> para trabajar con puntos, vectores y futuros planos 3D.
+          💡 Consejo (Matemáticas): rota la figura moviendo tu mano frente a la cámara.
+          Usa el gesto 🤏 sobre el botón verde fijo (arriba a la izquierda de la cámara)
+          para cambiar de figura.  
+          Cuando cambies a la pestaña <strong>Ciencias</strong>, verás una simulación 3D
+          de astronomía con galaxias, estrellas y planetas.
         </div>
       </div>
     </div>
