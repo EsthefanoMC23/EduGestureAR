@@ -9,7 +9,9 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x020617);
 
 const camera3D = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
-camera3D.position.set(0, 3, 8);
+// Cámara un poco elevada pero apuntando al centro
+camera3D.position.set(0, 1.2, 7);
+camera3D.lookAt(0, 0, 0);
 
 // Control de zoom de la cámara
 let cameraZoom = camera3D.position.z;
@@ -24,6 +26,8 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.25));
 
 // Grupos por área
 const mathGroup = new THREE.Group();
+mathGroup.position.set(0, 0, 0);
+
 const astroGroup = new THREE.Group();
 
 scene.add(mathGroup);
@@ -99,6 +103,7 @@ function createMesh(shape) {
   const geometry = createGeometryFor(shape);
   const newMesh = new THREE.Mesh(geometry, material);
   newMesh.rotation.set(0.4, -0.4, 0.1);
+  newMesh.position.set(0, 0, 0); // centrado en el origen
   newMesh.userData.type = "figura";
   return newMesh;
 }
@@ -111,7 +116,9 @@ const axesHelper = new THREE.AxesHelper(4);
 mathGroup.add(axesHelper);
 
 const gridHelper = new THREE.GridHelper(12, 24, 0x444444, 0x222222);
-gridHelper.rotation.x = Math.PI / 2;
+// Grilla como piso ligeramente bajo la figura
+gridHelper.rotation.x = 0;
+gridHelper.position.y = -1;
 mathGroup.add(gridHelper);
 
 // Variables de rotación controladas por la mano
@@ -473,6 +480,8 @@ function createPlanetarySystem() {
     { radius: 0.5, orbit: 7, speed: 0.35, color: 0x7cffb0 }
   ];
 
+  planets = [];
+
   configs.forEach(cfg => {
     const geo = new THREE.SphereGeometry(cfg.radius, 32, 32);
     const mat = new THREE.MeshStandardMaterial({
@@ -736,7 +745,6 @@ function onResults(results) {
 
   const landmarks = results.multiHandLandmarks[0];
   const indexTip = landmarks[8];
-  const thumbTip = landmarks[4];
 
   const ix = indexTip.x * overlay.width;
   const iy = indexTip.y * overlay.height;
@@ -818,7 +826,7 @@ function onResults(results) {
     if (prevZoomDist !== null) {
       const delta = thumbIndexDist - prevZoomDist;
       if (Math.abs(delta) > 0.002) {
-        cameraZoom -= delta * 40; // factor de sensibilidad
+        cameraZoom -= delta * 40; // sensibilidad
         if (cameraZoom < minZoom) cameraZoom = minZoom;
         if (cameraZoom > maxZoom) cameraZoom = maxZoom;
         camera3D.position.z = cameraZoom;
