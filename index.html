@@ -18,11 +18,13 @@
 <body>
 
   <!-- ========================================================= -->
-  <!-- 🌀 PANTALLA DE CARGA (NUEVA ANIMACIÓN) -->
+  <!-- 🌀 PANTALLA DE CARGA -->
   <!-- ========================================================= -->
   <div id="loading-screen">
-    <div class="loader-ring"></div>
-    <div class="loader-text">Cargando EduGesture AR...</div>
+    <div>
+      <div class="loader-ring"></div>
+      <div class="loader-text">Cargando EduGesture AR...</div>
+    </div>
   </div>
 
   <!-- ========================================================= -->
@@ -31,17 +33,19 @@
   <div class="top-bar">
     <div class="brand">
       <span class="logo-dot"></span>
-      <span class="brand-title">EduGesture <span class="brand-sub">AR</span></span>
+      <span class="brand-title">
+        EduGesture <span class="brand-sub">AR</span>
+      </span>
     </div>
 
     <div class="top-info">
-      <span>👋 Usa tu mano para rotar objetos o escenas</span>
-      <span>🤏 Pinch = Clic</span>
+      <span>👋 Mueve tu mano para rotar escenas</span>
+      <span>🤏 Pulgar + índice = clic</span>
     </div>
   </div>
 
   <!-- ========================================================= -->
-  <!-- 🟩 PESTAÑAS PRINCIPALES (SUBJECTS) -->
+  <!-- 🟩 PESTAÑAS PRINCIPALES -->
   <!-- ========================================================= -->
   <div class="tab-bar">
     <button class="subject-tab active" data-subject="math">📐 Matemáticas</button>
@@ -55,14 +59,14 @@
   <div class="app-container">
 
     <!-- ========================================================= -->
-    <!-- 🧊 MENÚ HOLOGRÁFICO LATERAL (DINÁMICO SEGÚN MÓDULO) -->
+    <!-- 🧊 MENÚ HOLOGRÁFICO LATERAL -->
     <!-- ========================================================= -->
     <div class="holo-menu">
 
       <div class="holo-title">HOLOTOOLS</div>
 
-      <!-- MATEMÁTICAS -->
-      <div class="math-tools subject-tools active" data-subject="math">
+      <!-- ================= MATEMÁTICAS ================= -->
+      <div class="subject-tools active" data-subject="math">
         <button class="menu-item active" data-tool="figura">📦 Figura 3D</button>
         <button class="menu-item" data-tool="crear-punto">➕ Crear Punto</button>
         <button class="menu-item" data-tool="crear-vector">📍 Crear Vector</button>
@@ -70,41 +74,45 @@
 
         <div class="holo-separator"></div>
 
-        <button class="menu-item" data-tool="borrar">🗑️ Borrar selección</button>
-        <button class="menu-item" data-tool="reset">🔄 Reset escena</button>
+        <button class="menu-item" data-tool="borrar">🗑️ Borrar</button>
+        <button class="menu-item" data-tool="reset">🔄 Reset Escena</button>
       </div>
 
-      <!-- CIENCIAS -->
-      <div class="science-tools subject-tools" data-subject="science">
-        <button class="menu-item active" data-science="galaxia">🌌 Galaxia 3D</button>
-        <button class="menu-item" data-science="planetas">🪐 Sistema Planetario</button>
-        <button class="menu-item" data-science="estrellas">✨ Campo Estelar</button>
+      <!-- ================= CIENCIAS ================= -->
+      <div class="subject-tools" data-subject="science">
+        <button class="menu-item active" data-science="galaxy">🌌 Galaxia</button>
+        <button class="menu-item" data-science="planets">🪐 Planetas</button>
+        <button class="menu-item" data-science="stars">✨ Estrellas</button>
 
         <div class="holo-separator"></div>
 
         <button class="menu-item" data-science="reset">🔄 Reset Astronomía</button>
       </div>
 
-      <!-- ARTES -->
-      <div class="arts-tools subject-tools" data-subject="arts">
-        <button class="menu-item active" data-arttool="brush-cube">✏️ Pincel (Cubo)</button>
-        <button class="menu-item" data-arttool="brush-sphere">🖌️ Pincel suave (Esfera)</button>
+      <!-- ================= ARTES ================= -->
+      <div class="subject-tools" data-subject="arts">
+        <button class="menu-item active" data-arttool="brush-cube">✏️ Pincel Cubo</button>
+        <button class="menu-item" data-arttool="brush-sphere">🖌️ Pincel Suave</button>
+        <button class="menu-item" data-arttool="brush-air">🌫️ Pincel Aire</button>
+
+        <div class="holo-separator"></div>
 
         <button class="menu-item" data-arttool="color-red" style="color:#ff6b6b;">🔴 Rojo</button>
         <button class="menu-item" data-arttool="color-blue" style="color:#4b9fff;">🔵 Azul</button>
         <button class="menu-item" data-arttool="color-green" style="color:#22c55e;">🟢 Verde</button>
+        <button class="menu-item" data-arttool="color-yellow" style="color:#facc15;">🟡 Amarillo</button>
+
+        <div class="holo-separator"></div>
 
         <button class="menu-item" data-arttool="erase">🧽 Borrador</button>
         <button class="menu-item" data-arttool="clear">🗑️ Limpiar Lienzo</button>
-
-        <button class="menu-item" data-arttool="toggle-grid">📐 Cuadrícula ON/OFF</button>
         <button class="menu-item" data-arttool="move-canvas">✋ Mover Lienzo</button>
       </div>
 
     </div>
 
     <!-- ========================================================= -->
-    <!-- 🖥️ PANEL PRINCIPAL DE ESCENA 3D -->
+    <!-- 🖥️ PANEL PRINCIPAL DE ESCENA -->
     <!-- ========================================================= -->
     <div class="scene-panel">
 
@@ -113,47 +121,42 @@
         <span id="mode-label" class="panel-badge panel-badge-blue">Math Mode</span>
       </div>
 
-      <!-- Lienzo 3D -->
+      <!-- Canvas 3D -->
       <canvas id="scene3d"></canvas>
 
-      <!-- 🔍 Botones Zoom -->
+      <!-- 🔍 Zoom -->
       <div class="zoom-controls">
         <button id="zoom-in" class="zoom-btn">+</button>
         <button id="zoom-out" class="zoom-btn">−</button>
       </div>
 
-      <!-- 🎥 Cámara mini -->
+      <!-- 🎥 Cámara -->
       <div class="video-mini">
         <video id="input-video" playsinline></video>
         <canvas id="overlay"></canvas>
       </div>
 
-      <!-- 🧮 HUD Matemático -->
+      <!-- ================= HUD MATEMÁTICO ================= -->
       <div id="hud" class="hud">
         <div class="hud-top-row">
           <div class="hud-left">
-
             <div class="hud-row">
-              <span class="hud-label">Figura actual:</span>
+              <span class="hud-label">Figura:</span>
               <span id="shape-name" class="hud-value">Cubo</span>
             </div>
-
             <div class="hud-row">
-              <span class="hud-label">Rotación X/Y:</span>
+              <span class="hud-label">Rotación:</span>
               <span id="rotation-info" class="hud-value">0° / 0°</span>
             </div>
-
             <div class="hud-row">
               <span class="hud-label">Volumen:</span>
               <span id="volume-value" class="hud-value">0 u³</span>
             </div>
-
           </div>
 
           <button id="hud-toggle" class="hud-toggle-btn">▼</button>
         </div>
 
-        <!-- CONTROLES -->
         <div class="hud-section hud-controls">
 
           <div id="control-lado" class="hud-control">
@@ -188,14 +191,10 @@
         <div class="hud-section">
           <div class="hud-label">Fórmula:</div>
           <div id="formula-text" class="hud-formula">V = lado³</div>
-
-          <ul id="formula-explain" class="hud-explain">
-            <li><strong>V</strong>: volumen</li>
-            <li><strong>lado</strong>: arista del cubo</li>
-          </ul>
+          <ul id="formula-explain" class="hud-explain"></ul>
         </div>
-
       </div>
+
     </div>
   </div>
 
