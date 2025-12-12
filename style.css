@@ -12,6 +12,7 @@ body {
   display: flex;
   flex-direction: column;
   padding: 12px;
+  overflow: hidden; /* ✅ evita scroll raro con toolbars flotantes */
 }
 
 /* ========================================================= */
@@ -246,6 +247,126 @@ body {
     rgba(148, 163, 184, 0.9),
     rgba(15, 23, 42, 0)
   );
+}
+
+/* ========================================================= */
+/* 🎨 ARTES: TOOLBAR IZQUIERDA (NUEVO) */
+/*  - Botones para cambiar herramienta */
+/*  - Paleta de colores predeterminados */
+/*  - Solo visible en módulo Artes (controlado por JS con .active / .hidden) */
+/* ========================================================= */
+
+.art-toolbar {
+  position: absolute;
+  left: 14px;
+  top: 78px; /* ✅ debajo de tabs */
+  z-index: 50;
+  width: 72px;
+  padding: 10px 10px 12px;
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.78),
+    rgba(8, 47, 73, 0.72)
+  );
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  box-shadow:
+    0 0 22px rgba(37, 99, 235, 0.35),
+    inset 0 0 24px rgba(59, 130, 246, 0.18);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.art-toolbar.hidden {
+  display: none;
+}
+
+.art-tool-title {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  text-align: center;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.art-btn {
+  width: 52px;
+  height: 44px;
+  margin: 0 auto;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(30, 64, 175, 0.18);
+  color: #e5e7eb;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.art-btn:hover {
+  background: rgba(59, 130, 246, 0.28);
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.6);
+  transform: translateY(-1px);
+}
+
+.art-btn:active {
+  transform: translateY(0px);
+}
+
+.art-btn.active {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: rgba(34, 197, 94, 0.9);
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.6);
+}
+
+/* Paleta de colores (predeterminada) */
+.art-palette {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  justify-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.art-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.art-swatch:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.22);
+}
+
+.art-swatch.active {
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.45);
+}
+
+/* Indicador pequeño (opcional) del modo de arte */
+.art-hint {
+  font-size: 0.7rem;
+  color: #cbd5f5;
+  text-align: center;
+  line-height: 1.2;
+  opacity: 0.9;
 }
 
 /* ========================================================= */
@@ -599,5 +720,13 @@ body {
   .zoom-controls {
     top: 70px;
     right: 10px;
+  }
+
+  /* Toolbar artes baja para no tapar todo */
+  .art-toolbar {
+    left: 10px;
+    top: auto;
+    bottom: 140px;
+    width: 72px;
   }
 }
